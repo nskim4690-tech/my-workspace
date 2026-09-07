@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>내 작업대 (견본)</title>
+<style>
+:root{--navy:#2B3A4E;--copper:#C67B3C;--cream:#F7F3EE;--teal:#3A8FB7;--red:#b3503a}
+*{box-sizing:border-box}
+body{margin:0;background:#f7f8f9;font-family:'맑은 고딕','Malgun Gothic',sans-serif;
+     color:#333;font-size:11pt;line-height:1.7}
+.app{display:flex;min-height:100vh}
+aside{width:238px;flex:0 0 238px;background:#fff;border-right:1px solid #e5e7eb;padding:12px 10px;
+      position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{padding:6px 8px 4px}
+.brand b{font-size:12.5pt;color:var(--navy);display:block}
+.brand span{font-size:8pt;color:#9ca3af}
+.rename{margin:6px 8px 12px;background:var(--cream);border-radius:7px;padding:8px 10px;
+        font-size:8.5pt;color:#7a6a58;line-height:1.6}
+.grp{margin-bottom:4px}
+.gt{width:100%;display:flex;align-items:center;gap:7px;padding:7px 9px;border:0;background:none;
+    font:inherit;font-size:8.5pt;font-weight:bold;color:#6b7280;letter-spacing:.08em;cursor:pointer;
+    border-radius:6px}
+.gt:hover{background:#f9fafb}
+.gt .cnt{font-weight:normal;color:#b9bfc7;font-size:8pt;letter-spacing:0}
+.gt .car{margin-left:auto;color:#b9bfc7;transition:transform .2s}
+.gt.closed .car{transform:rotate(-90deg)}
+.gc{overflow:hidden}
+.gc.closed{max-height:0}
+.inner{margin-left:11px;padding:2px 0 5px 7px;border-left:1px solid #f0f1f3}
+.cell{display:flex;align-items:center;gap:8px;padding:5px 9px;border-radius:8px;font-size:9.5pt;
+      color:#374151;text-decoration:none}
+.cell:hover{background:#f4f5f7}
+.cell.active{background:var(--navy);color:#fff}
+.ic{flex-shrink:0}
+.lb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{margin-left:auto;width:6px;height:6px;border-radius:99px;background:#10b981;flex-shrink:0}
+.cell.active .dot{background:rgba(255,255,255,.75)}
+.pill{margin-left:auto;font-size:7.5pt;font-weight:bold;padding:0 5px;border-radius:4px;border:1px solid;
+      flex-shrink:0;white-space:nowrap}
+.pill.wip{background:#fffbeb;color:#b45309;border-color:#fde68a}
+.pill.plan{background:rgba(198,123,60,.1);color:var(--copper);border-color:rgba(198,123,60,.3)}
+.cell.active .pill{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.3)}
+main{flex:1;min-width:0;padding:20px 26px 70px;max-width:960px}
+.priv{background:var(--navy);color:#fff;border-radius:9px;padding:12px 16px;margin-bottom:16px;font-size:9.5pt}
+.priv b{color:#fff}
+.scr{display:none}
+.scr.on{display:block}
+.ch{display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:2px solid var(--copper);
+    margin-bottom:10px}
+h2{font-size:14pt;color:var(--navy);margin:0}
+p{margin:8px 0}
+p.what{color:#4b5563;font-size:10pt}
+b{color:var(--navy)}
+.ex{background:#fff;border:1px dashed var(--copper);border-radius:9px;padding:12px 14px;margin:12px 0}
+.ex .et{font-size:8.5pt;font-weight:bold;color:var(--copper);letter-spacing:.04em;margin-bottom:7px}
+table{width:100%;border-collapse:collapse;font-size:9.5pt}
+th{background:var(--navy);color:#fff;text-align:left;padding:6px 9px;font-size:8.5pt}
+th.c,td.c{text-align:left}
+td{padding:7px 9px;border-bottom:1px solid #f0f1f3;vertical-align:top}
+tr:last-child td{border-bottom:0}
+.src{font-size:8.5pt;color:#6b7280;background:#f2f4f6;border-radius:7px;padding:7px 11px;margin:10px 0}
+.src b{color:var(--navy)}
+.note{font-size:9pt;color:#5b6470;background:#fff;border:1px solid #e5e7eb;border-left:3px solid var(--teal);
+      border-radius:0 8px 8px 0;padding:10px 13px;margin:11px 0}
+.note.warn{border-left-color:var(--copper)}
+.note b{color:var(--navy)}
+.foot{margin-top:32px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:8.5pt;color:#9ca3af;
+      line-height:1.85}
+@media(max-width:820px){.app{flex-direction:column}aside{width:auto;flex:none;height:auto;position:static}}
+</style>
+<div class="app">
+<aside>
+  <div class="brand"><b>내 작업대</b><span>견본 v1 · 교육생용</span></div>
+  <div class="rename">★<b>제목을 내 이름으로 바꾸세요.</b><br>
+    대표님 것은 「큰기쁨 작업대」입니다 — 대희(大喜) = 큰 기쁨.<br>
+    내 이름에도 뜻이 있습니다.</div>
+  <div class="grp"><button class="gt" data-g="0"><span>나</span><span class="cnt">2/2</span><span class="car">▾</span></button><div class="gc" id="gc0"><div class="inner"><a class="cell" href="#/weekly" data-s="weekly"><span class="ic">🧭</span><span class="lb">이번 주 검토</span><span class="dot"></span></a><a class="cell" href="#/map" data-s="map"><span class="ic">🗺️</span><span class="lb">내 지도</span><span class="dot"></span></a></div></div></div><div class="grp"><button class="gt" data-g="1"><span>시간</span><span class="cnt">2/2</span><span class="car">▾</span></button><div class="gc" id="gc1"><div class="inner"><a class="cell" href="#/time" data-s="time"><span class="ic">⏱️</span><span class="lb">시간 집계</span><span class="dot"></span></a><a class="cell" href="#/output" data-s="output"><span class="ic">🔄</span><span class="lb">시간 → 무엇이 됐나</span><span class="dot"></span></a></div></div></div><div class="grp"><button class="gt" data-g="2"><span>돈</span><span class="cnt">2/2</span><span class="car">▾</span></button><div class="gc" id="gc2"><div class="inner"><a class="cell" href="#/money-in" data-s="money-in"><span class="ic">💰</span><span class="lb">들어온 돈</span><span class="dot"></span></a><a class="cell" href="#/money-out" data-s="money-out"><span class="ic">💸</span><span class="lb">나간 돈</span><span class="dot"></span></a></div></div></div><div class="grp"><button class="gt" data-g="3"><span>배움</span><span class="cnt">2/2</span><span class="car">▾</span></button><div class="gc" id="gc3"><div class="inner"><a class="cell" href="#/progress" data-s="progress"><span class="ic">📚</span><span class="lb">훈련 진도</span><span class="dot"></span></a><a class="cell" href="#/cert" data-s="cert"><span class="ic">🎓</span><span class="lb">자격 시험</span><span class="dot"></span></a></div></div></div><div class="grp"><button class="gt" data-g="4"><span>밖으로</span><span class="cnt">2/2</span><span class="car">▾</span></button><div class="gc" id="gc4"><div class="inner"><a class="cell" href="#/site" data-s="site"><span class="ic">🌐</span><span class="lb">내 홈페이지</span><span class="dot"></span></a><a class="cell" href="#/insta" data-s="insta"><span class="ic">📸</span><span class="lb">인스타</span><span class="dot"></span></a></div></div></div><div class="grp"><button class="gt" data-g="5"><span>취업</span><span class="cnt">2/2</span><span class="car">▾</span></button><div class="gc" id="gc5"><div class="inner"><a class="cell" href="#/forge" data-s="forge"><span class="ic">🔨</span><span class="lb">포지 · 지원</span><span class="dot"></span></a><a class="cell" href="#/people" data-s="people"><span class="ic">🤝</span><span class="lb">만난 사람</span><span class="dot"></span></a></div></div></div><div class="grp"><button class="gt" data-g="6"><span>챙길 것</span><span class="cnt">1/1</span><span class="car">▾</span></button><div class="gc" id="gc6"><div class="inner"><a class="cell" href="#/deadlines" data-s="deadlines"><span class="ic">📅</span><span class="lb">챙길 날짜</span><span class="dot"></span></a></div></div></div><div class="grp"><button class="gt" data-g="7"><span>나의 사명</span><span class="cnt">1/1</span><span class="car">▾</span></button><div class="gc" id="gc7"><div class="inner"><a class="cell" href="#/mission" data-s="mission"><span class="ic">⚖️</span><span class="lb">나의 사명</span><span class="pill wip">내가 채움</span></a></div></div></div>
+</aside>
+<main>
+  <div class="priv">🔒 <b>이 파일은 내 컴퓨터에만 있습니다.</b>
+  학원에 오지 않고, 강사도 보지 않습니다. 통장·시험 결과·사명을 적어도 됩니다 —
+  <b>내 것이니까 솔직하게 쓸 수 있는 것이 이 작업대의 전부입니다.</b></div>
+  <section class="scr on" data-cell="weekly"><div class="ch"><h2>🧭 이번 주 검토</h2><span class="dot"></span></div><p class="what">이번 주에 내가 판단할 것만 모이는 자리. 주 1회 10분.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>이번 주에 볼 것</th><th class="c">왜</th></tr><tr><td>실기시험이 30일 남았는데 자기공부가 주 2시간뿐이다</td><td class="c">시간 집계에서 자동으로 나온다</td></tr><tr><td>공구 구입에 12만원 썼는데 장려금은 아직이다</td><td class="c">나간 돈 − 들어온 돈</td></tr></table></div><div class="src"><b>어디서 오나</b> · 아래 칸들에서 계산된다 — 여기는 직접 쓰지 않는다</div><div class="note">★이 자리의 규칙 — <b>여기서 정하는 것은 「이번 주에 무엇을 바꿀까」 하나</b>입니다. 세부는 각 칸에서 봅니다.</div></section><section class="scr" data-cell="map"><div class="ch"><h2>🗺️ 내 지도</h2><span class="dot"></span></div><p class="what">내 작업대의 칸 전체. 무엇이 채워졌고 무엇이 비었나.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>묶음</th><th class="c">칸</th><th class="c">지금</th></tr><tr><td>시간</td><td class="c">시간 집계</td><td class="c">채움</td></tr><tr><td>취업</td><td class="c">포지 · 지원</td><td class="c">아직</td></tr></table></div><div class="src"><b>어디서 오나</b> · 이 화면이 목록이다</div><div class="note">★<b>칸을 늘리는 것이 이 작업대의 사용법입니다.</b> 지금 없는 영역(운동·가족·취미)이 생각나면 지도에 한 줄 더합니다. 처음부터 다 만들지 않습니다.</div></section><section class="scr" data-cell="time"><div class="ch"><h2>⏱️ 시간 집계</h2><span class="dot"></span></div><p class="what">한 주에 내 시간이 어디로 갔나. 영역은 <b>내가</b> 정한다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>영역</th><th class="c">이번 주</th><th class="c">비중</th></tr><tr><td>훈련 (수업 · 실습)</td><td class="c">40시간</td><td class="c">78%</td></tr><tr><td>자기공부 (필기 · 복습)</td><td class="c">2시간</td><td class="c">4%</td></tr></table></div><div class="src"><b>어디서 오나</b> · 달력을 쓰면 자동 · 안 쓰면 하루 한 줄 수기</div><div class="note">★<b>「모르는 시간」을 지우지 마십시오.</b> 40+2=42시간인데 깨어 있는 시간은 그보다 훨씬 깁니다. 그 차이를 「미분류」로 적어 두면, 어디가 새는지 보입니다. 지우면 42시간이 「전체」로 보입니다.</div><div class="note warn">⚠ 영역을 5개 넘게 만들지 마십시오. 처음엔 3개로 시작하고, 세다 보면 필요한 것이 생깁니다.</div></section><section class="scr" data-cell="output"><div class="ch"><h2>🔄 시간 → 무엇이 됐나</h2><span class="dot"></span></div><p class="what">들인 시간이 무엇으로 남았나. 이게 이 작업대의 심장이다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>영역</th><th class="c">들인 시간</th><th class="c">남은 것</th></tr><tr><td>훈련</td><td class="c">40시간</td><td class="c">작품 1개 · 실기 과제 2개 완성</td></tr><tr><td>자기공부</td><td class="c">2시간</td><td class="c">필기 오답 12문항 정리 — <b>실기엔 도움 안 됨</b></td></tr></table></div><div class="src"><b>어디서 오나</b> · 시간 집계 + 내가 적는 「남은 것」</div><div class="note">★<b>시간이 많은 쪽이 아니라 남은 것이 적은 쪽</b>을 보십시오. 위 예시에서 자기공부 2시간은 필기용이었는데 다음 시험은 실기입니다 — <b>들인 시간이 향한 곳이 틀렸습니다.</b> 이런 것은 시간만 세면 절대 안 보입니다.</div></section><section class="scr" data-cell="money-in"><div class="ch"><h2>💰 들어온 돈</h2><span class="dot"></span></div><p class="what">이번 달 들어온 것. 얼마인지보다 <b>언제 들어오는지</b>가 중요하다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>무엇</th><th class="c">금액</th><th class="c">언제</th></tr><tr><td>훈련장려금</td><td class="c">316,000원</td><td class="c">매월 (지급 지연 있음)</td></tr><tr><td>주말 알바</td><td class="c">240,000원</td><td class="c">격주 금요일</td></tr></table></div><div class="src"><b>어디서 오나</b> · 통장 앱을 보고 월 1회 수기 · CSV 내려받기 가능</div><div class="note">개인은 통장을 자동으로 가져오는 길이 없습니다(제도상). <b>월 1회 5분 수기가 정답입니다</b> — 매일 적으려 하면 3일 만에 그만둡니다.</div></section><section class="scr" data-cell="money-out"><div class="ch"><h2>💸 나간 돈</h2><span class="dot"></span></div><p class="what">이번 달 나간 것. <b>훈련 때문에 생긴 지출</b>을 따로 센다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>무엇</th><th class="c">금액</th><th class="c">성격</th></tr><tr><td>공구 구입 (끌 · 대패)</td><td class="c">124,000원</td><td class="c"><b>자산</b> — 수료 후에도 남는다</td></tr><tr><td>교통비</td><td class="c">88,000원</td><td class="c">비용 — 훈련이 끝나면 없어진다</td></tr></table></div><div class="src"><b>어디서 오나</b> · 카드·통장 앱 · 월 1회 수기</div><div class="note">★<b>「자산」과 「비용」을 나누는 것이 이 칸의 전부입니다.</b> 공구는 수료 후에도 남고 교통비는 사라집니다. 둘을 합쳐 「이번 달 21만원 썼다」로만 보면 판단이 안 됩니다.</div></section><section class="scr" data-cell="progress"><div class="ch"><h2>📚 훈련 진도</h2><span class="dot"></span></div><p class="what">과정이 어디까지 왔나. 남은 회차로 계획을 세운다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>항목</th><th class="c">지금</th><th class="c">남은 것</th></tr><tr><td>인테리어목수 2기 AI수업</td><td class="c">7 / 20회차</td><td class="c">13회차 · 약 6주</td></tr><tr><td>작품</td><td class="c">2개 완성</td><td class="c">수료작 1개 (D-40)</td></tr></table></div><div class="src"><b>어디서 오나</b> · 수업 일정표 + 내가 적기</div><div class="note">진도는 학원이 관리하지만 <b>「그래서 내가 뭘 해야 하나」는 아무도 대신 못 합니다.</b> 그게 이 칸입니다.</div></section><section class="scr" data-cell="cert"><div class="ch"><h2>🎓 자격 시험</h2><span class="dot"></span></div><p class="what">시험 일정과 준비 상태. <b>날짜가 정해진 것</b>이라 가장 급하다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>시험</th><th class="c">상태</th><th class="c">날짜</th></tr><tr><td>건축목공기능사 필기</td><td class="c">합격</td><td class="c">2026-06-14</td></tr><tr><td>건축목공기능사 실기</td><td class="c">★준비 중 — 도면 연습 3회</td><td class="c">2026-09-25 (D-30)</td></tr></table></div><div class="src"><b>어디서 오나</b> · 큐넷(q-net.or.kr) 확인 후 수기</div><div class="note">★큐넷 일정은 <b>매년 바뀝니다.</b> 원서접수 기간을 놓치면 다음 회차까지 3~4개월을 기다립니다 — 접수일을 「챙길 날짜」에 반드시 넣으십시오.</div></section><section class="scr" data-cell="site"><div class="ch"><h2>🌐 내 홈페이지</h2><span class="dot"></span></div><p class="what">수업 5회차에 만든 내 홈페이지. 사람들이 나를 찾는 자리.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>항목</th><th class="c">지금</th><th class="c">다음</th></tr><tr><td>프로필 · 사진</td><td class="c">올림 (작품 2개)</td><td class="c">수료작 올리기</td></tr><tr><td>방문</td><td class="c">12회 (대부분 나)</td><td class="c">이력서·인스타에 주소 넣기</td></tr></table></div><div class="src"><b>어디서 오나</b> · 수업에서 만든 페이지 + 내가 적기</div><div class="note">★<b>만든 것으로 끝나면 아무 일도 안 일어납니다.</b> 주소를 이력서·인스타·카톡 프로필에 넣어야 방문이 생깁니다. 이 칸은 「만들었나」가 아니라 「쓰고 있나」를 봅니다.</div></section><section class="scr" data-cell="insta"><div class="ch"><h2>📸 인스타</h2><span class="dot"></span></div><p class="what">작업 과정을 올리는 곳. 완성품보다 <b>과정</b>이 잘 읽힌다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>항목</th><th class="c">이번 주</th><th class="c">메모</th></tr><tr><td>게시</td><td class="c">3건 (작업 과정 2 · 완성 1)</td><td class="c">과정 게시물이 반응이 더 좋았다</td></tr><tr><td>들인 시간</td><td class="c">1.5시간</td><td class="c">게시당 30분 — 줄일 수 있나</td></tr></table></div><div class="src"><b>어디서 오나</b> · 인스타 앱 인사이트 + 수기</div><div class="note">들인 시간을 함께 적으십시오. <b>「홍보는 공짜」가 아니라 시간을 씁니다</b> — 그 시간이 훈련·공부와 경쟁합니다.</div></section><section class="scr" data-cell="forge"><div class="ch"><h2>🔨 포지 · 지원</h2><span class="dot"></span></div><p class="what">바오밥 포지 등재와 지원 이력. 수료 전에 시작한다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>무엇</th><th class="c">상태</th><th class="c">날짜</th></tr><tr><td>바오밥 포지 등재</td><td class="c">신청 완료 — 강사 확인 대기</td><td class="c">2026-08-13</td></tr><tr><td>○○목공소 지원</td><td class="c">이력서 제출</td><td class="c">2026-08-20</td></tr></table></div><div class="src"><b>어디서 오나</b> · 포지 화면 + 내가 적기</div><div class="note">★<b>지원한 곳을 적어 두지 않으면 어디에 넣었는지 잊습니다.</b> 면접 연락이 왔을 때 「어디셨죠?」가 되면 그 자리에서 끝납니다.</div></section><section class="scr" data-cell="people"><div class="ch"><h2>🤝 만난 사람</h2><span class="dot"></span></div><p class="what">훈련 중 만난 사람. 취업은 대부분 사람에서 온다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>누구</th><th class="c">어디서</th><th class="c">무엇을 얻었나</th></tr><tr><td>배종원 대표 (팀밀리미터)</td><td class="c">학원 특강</td><td class="c">가구시공 팀 채용 얘기 — 연락처 받음</td></tr><tr><td>1기 수료 선배</td><td class="c">실습실</td><td class="c">현장 첫 달 실제 이야기</td></tr></table></div><div class="src"><b>어디서 오나</b> · 직접 적기</div><div class="note">★<b>이름과 「무엇을 얻었나」만 적으십시오.</b> 연락처를 적는 칸이 아닙니다 — 그건 폰에 있습니다. 여기 적을 것은 <b>「이 사람이 나에게 무엇이었나」</b>입니다.</div></section><section class="scr" data-cell="deadlines"><div class="ch"><h2>📅 챙길 날짜</h2><span class="dot"></span></div><p class="what">놓치면 되돌릴 수 없는 날짜만. 그 외는 적지 않는다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>날짜</th><th class="c">무엇</th><th class="c">놓치면</th></tr><tr><td>2026-09-25</td><td class="c">건축목공기능사 실기시험</td><td class="c">다음 회차까지 3~4개월</td></tr><tr><td>2026-10-15</td><td class="c">과정 수료 — 출석률 80% 유지</td><td class="c">수료 불가 · 장려금 정산</td></tr></table></div><div class="src"><b>어디서 오나</b> · 직접 적기</div><div class="note">★<b>날짜가 없는 일은 여기 적지 마십시오.</b> 「운동 시작하기」 같은 것을 넣으면 이 칸이 못 지킨 약속 목록이 되고, 그러면 안 보게 됩니다.</div></section><section class="scr" data-cell="mission"><div class="ch"><h2>⚖️ 나의 사명</h2><span class="pill wip">내가 채움</span></div><p class="what">나는 무엇을 향해 가는가. <b>이 칸은 비어 있어야 정상입니다.</b></p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>영역</th><th class="c">이번 주 시간</th><th class="c">내 사명에 닿았나</th></tr><tr><td>훈련</td><td class="c">40시간</td><td class="c">— 내가 적는다 —</td></tr><tr><td>주말 알바</td><td class="c">8시간</td><td class="c">— 내가 적는다 —</td></tr></table></div><div class="src"><b>어디서 오나</b> · 나만 쓸 수 있다 · 월 1회</div><div class="note">★<b>이 칸은 남이 채워 줄 수 없습니다.</b> 참고로 대표님(김대희)은 「기울어진 운동장을 복원한다」입니다. <b>그건 대표님 것이고, 당신 것이 아닙니다.</b> 베끼면 이 칸은 죽습니다.<br><br>처음엔 문장이 안 나옵니다. 그러면 이렇게 시작하십시오 — <b>「나는 무엇이 억울했나」</b>. 그 억울함이 남에게도 있다면, 그걸 없애는 것이 사명이 됩니다.</div><div class="note warn">⚠ 돈과 시간은 수단입니다. 이 칸이 비면 나머지 숫자는 「무엇을 위한 것인지 모르는 효율」이 됩니다 — 바빴는데 어디로 갔는지 모르는 1년이 됩니다.</div></section>
+  <div class="foot">
+    <b>내 작업대 · 견본 v1</b> — 바오밥 AI수업 산출물. 「큰기쁨 작업대」(대표님 개인 ERP)의 교육버전.<br>
+    <b>쓰는 법</b> — ① 예시를 지우고 내 것을 넣는다 ② 영역은 3개로 시작한다
+    ③ 매주 10분, 「이번 주 검토」만 본다 ④ 칸이 필요해지면 그때 늘린다.<br>
+    <b>★처음부터 다 채우지 마십시오.</b> 다 채우려다 그만두는 것이 가장 흔한 실패입니다.
+    한 칸이라도 <b>매주</b> 채우는 것이 열 칸을 한 번 채우는 것보다 낫습니다.<br>
+    <b>고치는 법</b> — 이 파일은 HTML 한 장입니다. AI에게 「내 작업대에 ○○ 칸 추가해줘」라고
+    말하면 됩니다. <b>고칠 수 있다는 것이 남이 만든 앱과 다른 점입니다.</b>
+  </div>
+</main>
+</div>
+<script>
+var cells=[].slice.call(document.querySelectorAll('.cell'));
+var scrs=[].slice.call(document.querySelectorAll('.scr'));
+function show(s){var hit=false;
+ scrs.forEach(function(x){var on=x.dataset.cell===s;x.classList.toggle('on',on);if(on)hit=true;});
+ if(!hit&&scrs.length){scrs[0].classList.add('on');s=scrs[0].dataset.cell;}
+ cells.forEach(function(a){a.classList.toggle('active',a.dataset.s===s);});
+ var act=document.querySelector('.cell.active');
+ if(act){var gc=act.closest('.gc');if(gc&&gc.classList.contains('closed')){
+  gc.classList.remove('closed');gc.style.maxHeight='';
+  var b=document.querySelector('[data-g="'+gc.id.slice(2)+'"]');if(b)b.classList.remove('closed');}}
+ window.scrollTo(0,0);}
+window.addEventListener('hashchange',function(){show((location.hash||'').replace(/^#\/?/,''));});
+document.querySelectorAll('.gt').forEach(function(b){b.addEventListener('click',function(){
+ var gc=document.getElementById('gc'+b.dataset.g);var cl=gc.classList.toggle('closed');
+ b.classList.toggle('closed',cl);gc.style.maxHeight=cl?'0px':'';});});
+show((location.hash||'').replace(/^#\/?/,''));
+</script>
