@@ -90,20 +90,6 @@ body.hide-money .money-sensitive,body.hide-money .moneytable{filter:blur(7px);po
 
 <div class="src money-sensitive" id="asWhyBox"><b>왜 변했나</b> · 아직 기록이 없습니다</div>
 
-<div class="ex" style="border-color:var(--teal);margin-top:14px">
-<div class="et" style="color:var(--teal)">이번 달 기록 추가</div>
-<table style="margin-bottom:8px">
-<tr><td style="border:0;padding:4px 6px 4px 0">기준일</td><td style="border:0;padding:4px"><input id="snapDate" type="date" style="padding:5px;border:1px solid #e5e7eb;border-radius:6px;font:inherit"></td></tr>
-<tr><td style="border:0;padding:4px 6px 4px 0">총자산</td><td style="border:0;padding:4px"><input id="snapAsset" type="number" min="0" style="width:160px;padding:5px;border:1px solid #e5e7eb;border-radius:6px;font:inherit"></td>
-<td style="border:0;padding:4px 6px 4px 16px">부채</td><td style="border:0;padding:4px"><input id="snapDebt" type="number" min="0" style="width:160px;padding:5px;border:1px solid #e5e7eb;border-radius:6px;font:inherit"></td></tr>
-<tr><td style="border:0;padding:4px 6px 4px 0;vertical-align:top">남의 돈<br><span style="font-size:8pt;color:#9ca3af;font-weight:normal">모임회비·맡아둔 돈·<br>곧 나갈 돈 등</span></td><td style="border:0;padding:4px" colspan="3"><input id="snapExclude" type="number" min="0" value="0" style="width:160px;padding:5px;border:1px solid #e5e7eb;border-radius:6px;font:inherit"></td></tr>
-</table>
-<div style="display:flex;align-items:center;gap:8px">
-<button id="snapSave" style="padding:6px 14px;border:0;border-radius:7px;background:var(--teal);color:#fff;font:inherit;cursor:pointer">기록 추가</button>
-<span id="snapStatus" style="font-size:8.5pt;color:#6b7280"></span>
-</div>
-</div>
-
 <div class="src money-sensitive"><b>언제부터 그랬나</b> · 월별 기록 (최신순)</div>
 <table class="moneytable" id="snapTable">
 <thead><tr><th>기준일</th><th class="c">총자산</th><th class="c">부채</th><th class="c">남의 돈</th><th class="c">순자산</th></tr></thead>
@@ -454,12 +440,6 @@ show((location.hash||'').replace(/^#\/?/,''));
   var asOfEl = document.getElementById('asAsOf');
   var bigNetEl = document.getElementById('asBigNet');
   var whyBox = document.getElementById('asWhyBox');
-  var snapDateIn = document.getElementById('snapDate');
-  var snapAssetIn = document.getElementById('snapAsset');
-  var snapDebtIn = document.getElementById('snapDebt');
-  var snapExcludeIn = document.getElementById('snapExclude');
-  var snapSaveBtn = document.getElementById('snapSave');
-  var snapStatus = document.getElementById('snapStatus');
   var snapTableBody = document.getElementById('snapTableBody');
 
   var state = load();
@@ -575,21 +555,6 @@ show((location.hash||'').replace(/^#\/?/,''));
       goalResult.textContent = '';
     }
   }
-
-  snapSaveBtn.addEventListener('click', function(){
-    if(!snapDateIn.value){ alert('기준일을 선택해주세요.'); snapDateIn.focus(); return; }
-    var asset = Number(snapAssetIn.value) || 0;
-    var debt = Number(snapDebtIn.value) || 0;
-    var exclude = Number(snapExcludeIn.value) || 0;
-    var net = asset - debt - exclude;
-    var entry = { date: snapDateIn.value, asset: asset, debt: debt, exclude: exclude, net: net };
-    var idx = state.snapshots.findIndex(function(s){ return s.date === entry.date; });
-    if(idx !== -1) state.snapshots[idx] = entry; else state.snapshots.push(entry);
-    save();
-    renderSnapshots();
-    snapStatus.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
-    snapAssetIn.value = ''; snapDebtIn.value = ''; snapExcludeIn.value = '0';
-  });
 
   function render(){
     if(!state.accounts.length){
