@@ -892,6 +892,22 @@ show((location.hash||'').replace(/^#\/?/,''));
       { key: 's', label: '주식수' },
       { key: 'd', label: '분배금' }
     ];
+    var rateCells = [];
+    function updateRate(mi){
+      var m = holding.months[mi];
+      var p = Number(m.p) || 0;
+      var d = Number(m.d) || 0;
+      var el = rateCells[mi];
+      if(!el) return;
+      if(p > 0){
+        var rate = (d / p) * 100;
+        el.textContent = (rate >= 0 ? '+' : '') + rate.toFixed(2) + '%';
+        el.style.color = rate >= 0 ? 'var(--navy)' : 'var(--red)';
+      } else {
+        el.textContent = '—';
+        el.style.color = '#9ca3af';
+      }
+    }
     rowsDef.forEach(function(rd){
       var tr = document.createElement('tr');
       var th = document.createElement('td');
@@ -911,14 +927,35 @@ show((location.hash||'').replace(/^#\/?/,''));
           totalEl.textContent = fmt(computeGrandTotal());
           renderMonthlySummary();
           renderRowTotal();
+          updateRate(mi);
         });
         td.appendChild(input);
         tr.appendChild(td);
       });
       tbody.appendChild(tr);
     });
+
+    var rateRow = document.createElement('tr');
+    var rateTh = document.createElement('td');
+    rateTh.innerHTML = '<b>당월 수익률</b>';
+    rateTh.style.whiteSpace = 'nowrap';
+    rateRow.appendChild(rateTh);
+    holding.months.forEach(function(m, mi){
+      var rtd = document.createElement('td');
+      rtd.className = 'c';
+      rtd.style.fontSize = '9pt';
+      rateCells.push(rtd);
+      rateRow.appendChild(rtd);
+    });
+    tbody.appendChild(rateRow);
+    holding.months.forEach(function(m, mi){ updateRate(mi); });
+
     table.appendChild(tbody);
     wrap.appendChild(table);
+    var rateNote = document.createElement('div');
+    rateNote.style.cssText = 'font-size:8pt;color:#9ca3af;text-align:right;margin-top:2px';
+    rateNote.textContent = '당월 수익률 = 그 달 분배금 ÷ 그 달 투자원금 × 100';
+    wrap.appendChild(rateNote);
 
     var totalLine = document.createElement('div');
     totalLine.style.cssText = 'font-size:8.5pt;color:#6b7280;text-align:right';
