@@ -966,9 +966,9 @@ show((location.hash||'').replace(/^#\/?/,''));
 
     var tbody = document.createElement('tbody');
     var rowsDef = [
-      { key: 'p', label: '투자원금' },
+      { key: 'p', label: '투자원금(만원)', unit: 10000 },
       { key: 's', label: '주식수' },
-      { key: 'd', label: '분배금' }
+      { key: 'd', label: '분배금(원)' }
     ];
     var rateCells = [];
     function updateRate(mi){
@@ -997,10 +997,11 @@ show((location.hash||'').replace(/^#\/?/,''));
         td.className = 'c';
         var input = document.createElement('input');
         input.type = 'number';
-        input.value = m[rd.key] || '';
+        input.value = m[rd.key] ? (rd.unit ? (m[rd.key] / rd.unit) : m[rd.key]) : '';
         input.style.cssText = 'width:78px;padding:4px;border:1px solid #e5e7eb;border-radius:5px;font:inherit;text-align:right';
         input.addEventListener('input', function(){
-          holding.months[mi][rd.key] = Number(input.value) || 0;
+          var raw = Number(input.value) || 0;
+          holding.months[mi][rd.key] = rd.unit ? Math.round(raw * rd.unit) : raw;
           save();
           totalEl.textContent = fmt(computeGrandTotal());
           renderMonthlySummary();
