@@ -13,3 +13,9 @@ studio-kns-wood/
 # 파이썬 캐시
 __pycache__/
 *.pyc
+
+# 뱅크샐러드 등 은행/자산 엑셀 내보내기 - 절대 커밋하지 않음
+*.xlsx
+*.xls
+~$*.xlsx
+~$*.xls
