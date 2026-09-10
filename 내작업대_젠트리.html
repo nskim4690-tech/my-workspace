@@ -798,7 +798,7 @@ show((location.hash||'').replace(/^#\/?/,''));
   }
   function emptyMonths(){
     var arr = [];
-    for(var i = 0; i < 12; i++) arr.push({ p: 0, s: 0, d: 0 });
+    for(var i = 0; i < 12; i++) arr.push({ p: 0, s: 0, d: 0, cm: 0, ce: 0 });
     return arr;
   }
 
@@ -986,7 +986,7 @@ show((location.hash||'').replace(/^#\/?/,''));
         el.style.color = '#9ca3af';
       }
     }
-    rowsDef.forEach(function(rd){
+    function buildInputRow(rd){
       var tr = document.createElement('tr');
       var th = document.createElement('td');
       th.innerHTML = '<b>' + rd.label + '</b>';
@@ -1012,8 +1012,9 @@ show((location.hash||'').replace(/^#\/?/,''));
         td.appendChild(input);
         tr.appendChild(td);
       });
-      tbody.appendChild(tr);
-    });
+      return tr;
+    }
+    rowsDef.forEach(function(rd){ tbody.appendChild(buildInputRow(rd)); });
 
     var rateRow = document.createElement('tr');
     var rateTh = document.createElement('td');
@@ -1029,6 +1030,12 @@ show((location.hash||'').replace(/^#\/?/,''));
     });
     tbody.appendChild(rateRow);
     holding.months.forEach(function(m, mi){ updateRate(mi); });
+
+    var priceRowsDef = [
+      { key: 'cm', label: '분배락 종가(월중)' },
+      { key: 'ce', label: '분배락 종가(월말)' }
+    ];
+    priceRowsDef.forEach(function(rd){ tbody.appendChild(buildInputRow(rd)); });
 
     table.appendChild(tbody);
     wrap.appendChild(table);
