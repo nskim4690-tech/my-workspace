@@ -798,7 +798,7 @@ show((location.hash||'').replace(/^#\/?/,''));
   }
   function emptyMonths(){
     var arr = [];
-    for(var i = 0; i < 12; i++) arr.push({ p: 0, s: 0, d: 0, cm: 0, ce: 0 });
+    for(var i = 0; i < 12; i++) arr.push({ p: 0, s: 0, d: 0, dv: 0, cm: 0, ce: 0 });
     return arr;
   }
 
@@ -968,7 +968,8 @@ show((location.hash||'').replace(/^#\/?/,''));
     var rowsDef = [
       { key: 'p', label: '투자원금(만원)', unit: 10000 },
       { key: 's', label: '주식수' },
-      { key: 'd', label: '분배금(원)' }
+      { key: 'd', label: '분배금(원)' },
+      { key: 'dv', label: '배당금(원)' }
     ];
     var rateCells = [];
     function updateRate(mi){
