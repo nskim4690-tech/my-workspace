@@ -139,6 +139,14 @@ body.hide-money .money-sensitive,body.hide-money .moneytable{filter:blur(7px);po
     <tbody><tr><td style="white-space:nowrap"><b>분배금 합계</b></td><td class="c" id="ivM0">0원</td><td class="c" id="ivM1">0원</td><td class="c" id="ivM2">0원</td><td class="c" id="ivM3">0원</td><td class="c" id="ivM4">0원</td><td class="c" id="ivM5">0원</td><td class="c" id="ivM6">0원</td><td class="c" id="ivM7">0원</td><td class="c" id="ivM8">0원</td><td class="c" id="ivM9">0원</td><td class="c" id="ivM10">0원</td><td class="c" id="ivM11">0원</td><td class="c" id="ivMYear" style="font-weight:bold;color:var(--navy)">0원</td></tr></tbody>
   </table>
 </div>
+<div class="ex money-sensitive" style="border-color:var(--copper)">
+  <div class="et" style="color:var(--copper)">연금 개시까지 계획</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <span style="font-size:9pt">연금 수령 개시일</span>
+    <input id="ivPensionDate" type="date" value="2028-12-01" style="padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit">
+  </div>
+  <div id="ivPlanResult" style="font-size:9.5pt;line-height:1.8"></div>
+</div>
 <div id="ivAccounts" class="money-sensitive"></div>
 </section><section class="scr" data-cell="money-in"><div class="ch"><h2>💰 들어온 돈</h2><span class="dot"></span></div><p class="what">이번 달 들어온 것. 얼마인지보다 <b>언제 들어오는지</b>가 중요하다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table class="moneytable"><tr><th>무엇</th><th class="c">금액</th><th class="c">언제</th></tr><tr><td>훈련 장려금</td><td class="c">316,000원</td><td class="c">매월 (지급 지연 있음)</td></tr><tr><td>실업급여</td><td class="c">약 300,000원</td><td class="c">격주 목요일 (3차: 8/28 예정)</td></tr></table></div><div class="src"><b>어디서 오나</b> · 통장 앱을 보고 월 1회 수기 · CSV 내려받기 가능</div><div class="note">개인은 통장을 자동으로 가져오는 길이 없습니다(제도상). <b>월 1회 5분 수기가 정답입니다</b> — 매일 적으려 하면 3일 만에 그만둡니다.</div></section><section class="scr" data-cell="money-out"><div class="ch"><h2>💸 나간 돈</h2><span class="dot"></span></div><p class="what">이번 달 나간 것. <b>훈련 때문에 생긴 지출</b>을 따로 센다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table class="moneytable"><tr><th>무엇</th><th class="c">금액</th><th class="c">성격</th></tr><tr><td>공구 구입 (목공 자산)</td><td class="c">약 150,000원</td><td class="c"><b>자산</b> — 수료 후에도 쓴다</td></tr><tr><td>주식/ETF 투자 (월1000 프로젝트)</td><td class="c">매월 가변</td><td class="c"><b>자산</b> — 배당 목표</td></tr></table></div><div class="src"><b>어디서 오나</b> · 카드·통장 앱 · 월 1회 수기</div><div class="note">★<b>「자산」과 「비용」을 나누는 것이 이 칸의 전부입니다.</b> 공구는 수료 후에도 남고 교통비는 사라집니다. 둘을 합쳐 「이번 달 21만원 썼다」로만 보면 판단이 안 됩니다.</div></section><section class="scr" data-cell="study"><div class="ch"><h2>📖 공부방</h2><span class="dot"></span></div><p class="what">오늘 배운 것을 날짜별로 쌓는다. 훈련 진도와 달리 그날그날의 기록이 핵심이다.</p><div class="ex" style="border-color:var(--teal)"><div class="et" style="color:var(--teal)">오늘 기록 추가 — 서버베이스 연동</div><input id="stDate" type="date" style="padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit;margin-bottom:8px"><textarea id="stContent" rows="4" placeholder="오늘 배운 것, 다음에 할 것 등을 적어보세요" style="width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px solid #e5e7eb;border-radius:7px;resize:vertical;margin-bottom:8px"></textarea><div style="display:flex;align-items:center;gap:8px"><button id="stSave" style="padding:6px 14px;border:0;border-radius:7px;background:var(--teal);color:#fff;font:inherit;cursor:pointer">기록 추가</button><span id="stStatus" style="font-size:8.5pt;color:#6b7280"></span></div></div><div class="src"><b>지난 기록</b> · 최신순</div><div id="stList" style="display:flex;flex-direction:column;gap:10px"><p style="color:#9ca3af;font-size:9pt">불러오는 중...</p></div></section><section class="scr" data-cell="progress"><div class="ch"><h2>📚 훈련 진도</h2><span class="dot"></span></div><p class="what">과정이 어디까지 왔나. 남은 회차로 계획을 세운다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>항목</th><th class="c">지금</th><th class="c">남은 것</th></tr><tr><td>목공 훈련 과정 (AI수업 포함)</td><td class="c">9 / 20회차</td><td class="c">11회차 · 약 5주</td></tr><tr><td>작품</td><td class="c">2개 완성</td><td class="c">수료작 1개 (D-40) · 기능사 실기 준비</td></tr></table></div><div class="src"><b>어디서 오나</b> · 수업 일정표 + 내가 적기</div><div class="note">진도는 학원이 관리하지만 <b>「그래서 내가 뭘 해야 하나」는 아무도 대신 못 합니다.</b> 그게 이 칸입니다.</div></section><section class="scr" data-cell="cert"><div class="ch"><h2>🎓 자격 시험</h2><span class="dot"></span></div><p class="what">시험 일정과 준비 상태. <b>날짜가 정해진 것</b>이라 가장 급하다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>시험</th><th class="c">상태</th><th class="c">날짜</th></tr><tr><td>건축목공기능사 필기</td><td class="c">✅ 합격</td><td class="c">2026-06-14</td></tr><tr><td>건축목공기능사 실기</td><td class="c">🔄 준비중 — 도면·실습</td><td class="c">2026-09-25 (D-30)</td></tr></table></div><div class="src"><b>어디서 오나</b> · 큐넷(q-net.or.kr) 확인 후 수기</div><div class="note">★큐넷 일정은 <b>매년 바뀝니다.</b> 원서접수 기간을 놓치면 다음 회차까지 3~4개월을 기다립니다 — 접수일을 「챙길 날짜」에 반드시 넣으십시오.</div></section><section class="scr" data-cell="site"><div class="ch"><h2>🌐 내 홈페이지</h2><span class="dot"></span></div><p class="what">수업 5회차에 만든 내 홈페이지. 사람들이 나를 찾는 자리.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>항목</th><th class="c">지금</th><th class="c">다음</th></tr><tr><td>사이트 제작</td><td class="c">계획 중</td><td class="c">9월부터 시작 예정</td></tr><tr><td>포트폴리오</td><td class="c">현재 작품 2개</td><td class="c">수료작 추가 후 공개</td></tr></table></div><div class="src"><b>어디서 오나</b> · 수업에서 만든 페이지 + 내가 적기</div><div class="note">★<b>만든 것으로 끝나면 아무 일도 안 일어납니다.</b> 주소를 이력서·인스타·카톡 프로필에 넣어야 방문이 생깁니다. 이 칸은 「만들었나」가 아니라 「쓰고 있나」를 봅니다.</div></section><section class="scr" data-cell="insta"><div class="ch"><h2>📸 인스타</h2><span class="dot"></span></div><p class="what">작업 과정을 올리는 곳. 완성품보다 <b>과정</b>이 잘 읽힌다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>항목</th><th class="c">이번 주</th><th class="c">메모</th></tr><tr><td>계정</td><td class="c">8월 개설 예정</td><td class="c">계정명 미정 (제주 목공 장인)</td></tr><tr><td>전략</td><td class="c">작업 과정 중심</td><td class="c">주 2~3회 포스팅 · 수료작부터 본격 시작</td></tr></table></div><div class="src"><b>어디서 오나</b> · 인스타 앱 인사이트 + 수기</div><div class="note">들인 시간을 함께 적으십시오. <b>「홍보는 공짜」가 아니라 시간을 씁니다</b> — 그 시간이 훈련·공부와 경쟁합니다.</div></section><section class="scr" data-cell="marketing"><div class="ch"><h2>📊 마케팅 대시보드</h2><span class="dot"></span></div><p class="what">인스타·홈페이지 숫자를 주차별로 쌓아서 본다. 표 하나에 줄이 쌓이는 것뿐이다.</p><div class="ex" style="border-color:var(--teal)"><div class="et" style="color:var(--teal)">이번 주 숫자 입력 — 서버베이스 연동</div><table style="margin-bottom:8px"><tr><td style="border:0;padding:4px 6px 4px 0">인스타 게시물 수</td><td style="border:0;padding:4px"><input id="mktPosts" type="number" min="0" style="width:80px;padding:5px;border:1px solid #e5e7eb;border-radius:6px;font:inherit"></td><td style="border:0;padding:4px 6px 4px 16px">인스타 좋아요 수</td><td style="border:0;padding:4px"><input id="mktLikes" type="number" min="0" style="width:80px;padding:5px;border:1px solid #e5e7eb;border-radius:6px;font:inherit"></td><td style="border:0;padding:4px 6px 4px 16px">홈페이지 방문자 수</td><td style="border:0;padding:4px"><input id="mktVisits" type="number" min="0" style="width:80px;padding:5px;border:1px solid #e5e7eb;border-radius:6px;font:inherit"></td></tr></table><div style="display:flex;align-items:center;gap:8px"><button id="mktSave" style="padding:6px 14px;border:0;border-radius:7px;background:var(--teal);color:#fff;font:inherit;cursor:pointer">이번 주 저장</button><span id="mktStatus" style="font-size:8.5pt;color:#6b7280"></span></div></div><div class="src"><b>지난 기록</b></div><table id="mktHistTable"><thead><tr><th>날짜</th><th class="c">게시물</th><th class="c">좋아요</th><th class="c">방문자</th></tr></thead><tbody id="mktHistBody"><tr><td colspan="4" style="color:#9ca3af">불러오는 중...</td></tr></tbody></table></section><section class="scr" data-cell="works"><div class="ch"><h2>🪵 작품 포트폴리오</h2><span class="dot"></span></div><p class="what">완성작만 골라서 깊이 남긴다. 인스타에는 없는 "다시 만든다면 뭘 고칠까"라는 회고가 핵심이다.</p><div class="ex" style="border-color:var(--teal)"><div class="et" style="color:var(--teal)">완성작 추가 — 서버베이스 연동</div><p style="margin:0 0 6px;font-size:9pt"><b>작품명</b></p><input id="wkTitle" type="text" style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit;margin-bottom:8px"><p style="margin:0 0 6px;font-size:9pt"><b>인스타 링크</b></p><input id="wkLink" type="text" placeholder="https://instagram.com/..." style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit;margin-bottom:8px"><p style="margin:0 0 6px;font-size:9pt"><b>어떤 과정에서 만들었는지</b></p><textarea id="wkProcess" rows="2" style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit;resize:vertical;margin-bottom:8px"></textarea><p style="margin:0 0 6px;font-size:9pt"><b>배운 것</b></p><textarea id="wkLearned" rows="2" style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit;resize:vertical;margin-bottom:8px"></textarea><p style="margin:0 0 6px;font-size:9pt"><b style="color:var(--red)">다시 만든다면 고칠 점 — 비워두지 마세요</b></p><textarea id="wkImprove" rows="2" style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid var(--copper);border-radius:6px;font:inherit;resize:vertical;margin-bottom:8px"></textarea><p style="margin:0 0 6px;font-size:9pt"><b>걸린 시간</b></p><input id="wkHours" type="text" placeholder="예: 3시간" style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit;margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px"><button id="wkSave" style="padding:6px 14px;border:0;border-radius:7px;background:var(--teal);color:#fff;font:inherit;cursor:pointer">작품 저장</button><span id="wkStatus" style="font-size:8.5pt;color:#6b7280"></span></div></div><div class="src"><b>저장된 작품</b></div><div id="wkList" style="display:flex;flex-direction:column;gap:10px"><p style="color:#9ca3af;font-size:9pt">불러오는 중...</p></div></section><section class="scr" data-cell="forge"><div class="ch"><h2>🔨 포지 · 지원</h2><span class="dot"></span></div><p class="what">바오밥 포지 등재와 지원 이력. 수료 전에 시작한다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>무엇</th><th class="c">상태</th><th class="c">날짜</th></tr><tr><td>바오밥 포지 등재</td><td class="c">신청 완료 — 강사 확인 대기</td><td class="c">2026-08-13</td></tr><tr><td>○○목공소 지원</td><td class="c">이력서 제출</td><td class="c">2026-08-20</td></tr></table></div><div class="src"><b>어디서 오나</b> · 포지 화면 + 내가 적기</div><div class="note">★<b>지원한 곳을 적어 두지 않으면 어디에 넣었는지 잊습니다.</b> 면접 연락이 왔을 때 「어디셨죠?」가 되면 그 자리에서 끝납니다.</div></section><section class="scr" data-cell="people"><div class="ch"><h2>🤝 만난 사람</h2><span class="dot"></span></div><p class="what">훈련 중 만난 사람. 취업은 대부분 사람에서 온다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>누구</th><th class="c">어디서</th><th class="c">무엇을 얻었나</th></tr><tr><td>배종원 대표 (팀밀리미터)</td><td class="c">학원 특강</td><td class="c">가구시공 팀 채용 얘기 — 연락처 받음</td></tr><tr><td>1기 수료 선배</td><td class="c">실습실</td><td class="c">현장 첫 달 실제 이야기</td></tr></table></div><div class="src"><b>어디서 오나</b> · 직접 적기</div><div class="note">★<b>이름과 「무엇을 얻었나」만 적으십시오.</b> 연락처를 적는 칸이 아닙니다 — 그건 폰에 있습니다. 여기 적을 것은 <b>「이 사람이 나에게 무엇이었나」</b>입니다.</div></section><section class="scr" data-cell="son"><div class="ch"><h2>👦 아들 현황</h2><span class="dot"></span></div><p class="what">군복무 중인 아들의 일정과 복학 계획.</p><div class="ex"><div class="et">예시 — 지우고 내 것을 넣으세요</div><table><tr><th>일정</th><th class="c">예정일</th><th class="c">상태</th></tr><tr><td>군 제대</td><td class="c">2026-11-13</td><td class="c">D-79 (확정)</td></tr><tr><td>복학 신청</td><td class="c">2027-01 또는 03월</td><td class="c">학과별로 상이</td></tr><tr><td>복학 후 졸업</td><td class="c">미정</td><td class="c">복학 시기에 따라 결정</td></tr></table></div><div class="src"><b>어디서 오나</b> · 국방부 전역 일정 + 대학 복학 계획</div><div class="note">아들 제대는 현재 확정되어 있으며, 복학 시기는 학과 사정에 따라 결정됨. 제대 후 2~3개월 내에 신청 필요.</div></section><section class="scr" data-cell="daughter"><div class="ch"><h2>👩 딸 학업</h2><span class="dot"></span></div><p class="what">의대생(본과 2학년)의 학업 일정과 임상실습 계획.</p><div class="ex"><div class="et">예시 — 지우고 내 것을 넣으세요</div><table><tr><th>단계</th><th class="c">시기</th><th class="c">상태</th></tr><tr><td>본과 2학년</td><td class="c">2026</td><td class="c">🔄 진행 중 (학기 말)</td></tr><tr><td>본과 3학년 (임상실습)</td><td class="c">2027-03 ~</td><td class="c">⏳ 예정 (약 18개월)</td></tr><tr><td>의사 면허시험</td><td class="c">2028-01~02</td><td class="c">⏳ 예정</td></tr><tr><td>졸업 (의사)</td><td class="c">2028-02</td><td class="c">⏳ 예정</td></tr></table></div><div class="src"><b>어디서 오나</b> · 의대 학사일정 + 교육과정</div><div class="note">임상실습은 본과 3학년 전체 + 4학년 일부에 걸쳐 진행됨. 의사 면허는 졸업 후 인턴 과정을 거침.</div></section><section class="scr" data-cell="portfolio"><div class="ch"><h2>📈 포트폴리오</h2><span class="dot"></span></div><p class="what">월 1,000만원 배당 → 평생 경제적 자유. IRP/ISA/주식 혼합 4종목.</p><table><tr><th>종목명</th><th class="c">티커</th><th class="c">종가 (8/26)</th><th class="c">등락률</th><th class="c">계좌</th></tr><tr><td>RISE 코리아밸류업위클리고정커버드콜</td><td class="c">0094M0</td><td class="c">17,760원</td><td class="c">+0.57%</td><td class="c">IRP/ISA</td></tr><tr><td>SOL 팔란티어커버드콜OTM채권혼합</td><td class="c">0040Y0</td><td class="c">8,270원</td><td class="c">+0.49%</td><td class="c">IRP/ISA</td></tr><tr><td>RISE 미국배당100데일리고정커버드콜</td><td class="c">490600</td><td class="c">9,260원</td><td class="c">-0.75%</td><td class="c">IRP/ISA</td></tr><tr><td>비에이치아이(BHI)</td><td class="c">083650</td><td class="c">64,800원</td><td class="c">+2.05%</td><td class="c">주식</td></tr></table><div class="src"><b>어디서 오나</b> · pykrx 자동 조회 (매일 08:03) + 월 1회 잔액 수기</div><div class="note">🔥 <b>083650(비에이치아이)</b> 이스라엘 575억원 LNG HRSG 공급계약 공시(8/26)로 최근 3거래일간 약 +16% 상승. <b>0040Y0</b>은 월 분배금 230원(연 배당률 28.16%, 국내 ETF 1위 수준).</div><div class="note warn">⚠ 총 자산·예상 월배당·목표 진행도는 IRP/ISA 특성상 자동 조회가 안 됩니다 — 월 1회(1일) 직접 입력 필요 (젠트리/월1000/포트폴리오.md).</div></section><section class="scr" data-cell="hobby"><div class="ch"><h2>🌱 취미 기록</h2><span class="dot"></span></div><p class="what">쉬는 시간에 뭘 했나. 텃밭·낚시·등산·영화관람.</p><table><tr><th>취미</th><th class="c">최근 기록</th><th class="c">메모</th></tr><tr><td>🌱 텃밭</td><td class="c">(입력)</td><td class="c">작물·파종/수확 일정</td></tr><tr><td>🎣 낚시</td><td class="c">8/29~30 태안 신진항 마도방파제 — 고등어 약 20마리</td><td class="c">추천 포인트 적중! 재방문 의향</td></tr><tr><td>⛰️ 등산</td><td class="c">(입력)</td><td class="c">산 이름·코스</td></tr><tr><td>🎬 영화관람</td><td class="c">(입력)</td><td class="c">작품·별점</td></tr></table><div class="src"><b>어디서 오나</b> · 취미/ 폴더 (텃밭.md · 낚시.md · 등산.md · 영화관람.md) + 직접 적기</div><div class="note">💡 각 취미별 상세 기록은 취미/ 폴더의 개별 파일에 적고, 여기는 <b>이번 달 요약</b>만 간단히 남기십시오.</div></section><section class="scr" data-cell="schedule"><div class="ch"><h2>📆 Google Calendar 연동</h2><span class="dot"></span></div><p class="what">Google Calendar의 일정을 자동으로 작업대에 반영하기.</p><table><tr><th>날짜</th><th class="c">일정</th><th class="c">시간</th></tr><tr><td>2026-08-28</td><td class="c">실업급여 인정신청 (3차)</td><td class="c">종일</td></tr><tr><td>2026-09-25</td><td class="c">건축목공기능사 실기시험</td><td class="c">오전</td></tr><tr><td>2026-10-15</td><td class="c">과정 수료</td><td class="c">종일</td></tr><tr><td>2026-11-13</td><td class="c">아들 군 제대</td><td class="c">종일</td></tr></table><div class="note">💡 Google Calendar와 자동 동기화 중입니다. 매일 08:00에 Google Calendar의 최신 일정이 반영됩니다.</div><div class="note">📱 <b>월1000 브리핑</b>은 매일 08:03 이메일·카카오톡으로 자동 발송됩니다 (시황·공시 포함, 카톡은 네이티브 도구 사용).</div></section><section class="scr" data-cell="deadlines"><div class="ch"><h2>📅 챙길 날짜</h2><span class="dot"></span></div><p class="what">놓치면 되돌릴 수 없는 날짜만. 그 외는 적지 않는다.</p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>날짜</th><th class="c">무엇</th><th class="c">놓치면</th></tr><tr><td>2026-08-28</td><td class="c">실업급여 3차 인정신청</td><td class="c">놓치면 2주 지급 중단</td></tr><tr><td>2026-09-25</td><td class="c">건축목공기능사 실기시험</td><td class="c">다음 회차까지 3~4개월</td></tr><tr><td>2026-10-15</td><td class="c">과정 수료</td><td class="c">수료 불가 시 장려금 정산</td></tr><tr><td>2026-11-13</td><td class="c">아들 군 제대 (D-79)</td><td class="c">복학 준비 시작</td></tr></table></div><div class="src"><b>어디서 오나</b> · 직접 적기</div><div class="note">★<b>날짜가 없는 일은 여기 적지 마십시오.</b> 「운동 시작하기」 같은 것을 넣으면 이 칸이 못 지킨 약속 목록이 되고, 그러면 안 보게 됩니다.</div></section><section class="scr" data-cell="mission"><div class="ch"><h2>⚖️ 나의 사명</h2><span class="pill wip">내가 채움</span></div><p class="what">나는 무엇을 향해 가는가. <b>이 칸은 비어 있어야 정상입니다.</b></p><div class="ex"><div class="et">예시 2개 — 지우고 내 것을 넣으세요</div><table><tr><th>영역</th><th class="c">이번 주 시간</th><th class="c">사명 진행</th></tr><tr><td>목공 훈련</td><td class="c">40시간</td><td class="c">제2의 인생 구축: 11월 수료 → 목공방 오픈</td></tr><tr><td>월1000 투자</td><td class="c">5시간</td><td class="c">평생 경제적 자유: 4개 종목으로 월 배당 추적</td></tr><tr><td>가족 관리</td><td class="c">3시간</td><td class="c">가족 자원관리: 아들 제대/복학, 딸 의학 지원</td></tr></table></div><div class="src"><b>어디서 오나</b> · 나만 쓸 수 있다 · 월 1회</div><div class="note">★<b>이 칸은 남이 채워 줄 수 없습니다.</b> 참고로 대표님(김대희)은 「기울어진 운동장을 복원한다」입니다. <b>그건 대표님 것이고, 당신 것이 아닙니다.</b> 베끼면 이 칸은 죽습니다.<br><br>처음엔 문장이 안 나옵니다. 그러면 이렇게 시작하십시오 — <b>「나는 무엇이 억울했나」</b>. 그 억울함이 남에게도 있다면, 그걸 없애는 것이 사명이 됩니다.</div><div class="note warn">⚠ 돈과 시간은 수단입니다. 이 칸이 비면 나머지 숫자는 「무엇을 위한 것인지 모르는 효율」이 됩니다 — 바빴는데 어디로 갔는지 모르는 1년이 됩니다.</div></section>
   <div class="foot">
@@ -754,10 +762,20 @@ show((location.hash||'').replace(/^#\/?/,''));
   var root = document.getElementById('ivAccounts');
   if(!root) return;
   var totalEl = document.getElementById('ivTotalDividend');
+  var pensionDateIn = document.getElementById('ivPensionDate');
+  var planResult = document.getElementById('ivPlanResult');
   var ACCOUNT_KEYS = ['삼성증권 · ISA', '삼성증권 · IRP', '삼성증권 · 주식', '미래에셋 · IRP'];
   var MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
   var state = load();
+  if(pensionDateIn){
+    pensionDateIn.value = state.pensionDate || '2028-12-01';
+    pensionDateIn.addEventListener('change', function(){
+      state.pensionDate = pensionDateIn.value;
+      save();
+      renderPlan();
+    });
+  }
 
   function load(){
     try{
@@ -816,6 +834,40 @@ show((location.hash||'').replace(/^#\/?/,''));
     if(yearEl) yearEl.textContent = fmt(yearSum);
   }
 
+  function renderPlan(){
+    if(!planResult) return;
+    var dateVal = (pensionDateIn && pensionDateIn.value) || state.pensionDate || '2028-12-01';
+    var target = new Date(dateVal + 'T00:00:00');
+    var today = new Date();
+    var todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    var daysLeft = Math.round((target - todayMid) / (1000 * 60 * 60 * 24));
+    var monthsLeft = (target.getFullYear() - today.getFullYear()) * 12 + (target.getMonth() - today.getMonth());
+    if(monthsLeft < 0) monthsLeft = 0;
+
+    var monthlyTotals = computeMonthlyTotals();
+    var filled = monthlyTotals.filter(function(t){ return t > 0; });
+    var avg = filled.length ? (filled.reduce(function(a, b){ return a + b; }, 0) / filled.length) : 0;
+    var grandTotal = computeGrandTotal();
+
+    var html = '';
+    if(daysLeft <= 0){
+      html += '🎉 연금 수령 개시일이 지났습니다.<br>';
+    } else {
+      html += '연금 개시까지 <b>D-' + daysLeft + '</b> · 약 ' + monthsLeft + '개월 남음<br>';
+    }
+    if(filled.length){
+      html += '지금까지 기록된 월평균 분배금 · <b>' + fmt(avg) + '</b> (기록 있는 ' + filled.length + '개월 평균)<br>';
+      if(avg > 0 && monthsLeft > 0){
+        var projected = avg * monthsLeft;
+        html += '이 추세면 개시일까지 <b>' + fmt(projected) + '</b>을 더 받을 것으로 예상<br>';
+        html += '지금까지 누적 ' + fmt(grandTotal) + ' + 예상 ' + fmt(projected) + ' = 개시일까지 총 <b style="color:var(--navy)">' + fmt(grandTotal + projected) + '</b> 예상';
+      }
+    } else {
+      html += '분배금을 몇 달 입력하면 여기에 추세 예상이 나옵니다.';
+    }
+    planResult.innerHTML = html;
+  }
+
   function render(){
     root.innerHTML = '';
     ACCOUNT_KEYS.forEach(function(key){
@@ -848,6 +900,7 @@ show((location.hash||'').replace(/^#\/?/,''));
 
     totalEl.textContent = fmt(computeGrandTotal());
     renderMonthlySummary();
+    renderPlan();
   }
 
   function renderHolding(key, holding, hIdx){
@@ -865,6 +918,30 @@ show((location.hash||'').replace(/^#\/?/,''));
       holding.name = nameIn.value;
       save();
     });
+    var carryBtn = document.createElement('button');
+    carryBtn.textContent = '⤵ 이월';
+    carryBtn.title = '마지막으로 입력한 달의 투자원금·주식수를 다음 빈 달로 복사합니다';
+    carryBtn.style.cssText = 'padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--teal);font:inherit;font-size:8.5pt;cursor:pointer';
+    carryBtn.addEventListener('click', function(){
+      var lastFilled = -1;
+      for(var i = 0; i < holding.months.length; i++){
+        var mm = holding.months[i];
+        if((Number(mm.p) || 0) > 0 || (Number(mm.s) || 0) > 0) lastFilled = i;
+      }
+      if(lastFilled === -1){
+        alert('아직 입력된 달이 없어서 이월할 내용이 없습니다.');
+        return;
+      }
+      if(lastFilled >= holding.months.length - 1){
+        alert('12월까지 이미 다 채워져 있습니다.');
+        return;
+      }
+      var next = holding.months[lastFilled + 1];
+      next.p = holding.months[lastFilled].p;
+      next.s = holding.months[lastFilled].s;
+      save();
+      render();
+    });
     var delBtn = document.createElement('button');
     delBtn.textContent = '삭제';
     delBtn.style.cssText = 'padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--red);font:inherit;font-size:8.5pt;cursor:pointer';
@@ -875,6 +952,7 @@ show((location.hash||'').replace(/^#\/?/,''));
       render();
     });
     nameRow.appendChild(nameIn);
+    nameRow.appendChild(carryBtn);
     nameRow.appendChild(delBtn);
     wrap.appendChild(nameRow);
 
@@ -926,6 +1004,7 @@ show((location.hash||'').replace(/^#\/?/,''));
           save();
           totalEl.textContent = fmt(computeGrandTotal());
           renderMonthlySummary();
+          renderPlan();
           renderRowTotal();
           updateRate(mi);
         });
