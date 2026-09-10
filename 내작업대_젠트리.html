@@ -487,45 +487,75 @@ show((location.hash||'').replace(/^#\/?/,''));
   }
 
   function parseFinanceSection(rows){
+    // "3. 재무현황" 아래는 "자산" 표와 "부채" 표가 좌우로 나란히 붙어 있는 구조.
+    // 예: B열=자산 항목, C열=자산 상품명, E열=자산 금액 / F열=부채 항목, G열=부채 상품명, I열=부채 금액
     var startIdx = -1;
     for(var i = 0; i < rows.length; i++){
-      var joined = rows[i].join(' ');
-      if(joined.indexOf('재무현황') !== -1){ startIdx = i; break; }
+      if(rows[i].join(' ').indexOf('재무현황') !== -1){ startIdx = i; break; }
     }
     if(startIdx === -1) return [];
 
-    var headerIdx = -1, cols = {};
-    for(var j = startIdx + 1; j < Math.min(rows.length, startIdx + 20); j++){
-      var r = rows[j];
-      var text = r.join('|');
-      if(/구분|자산|부채/.test(text) && /금융사|상품|계좌|잔액|금액|평가액/.test(text)){
-        headerIdx = j;
-        r.forEach(function(cell, ci){
-          var c = String(cell).trim();
-          if(/구분/.test(c)) cols.type = ci;
-          else if(/금융사|은행|기관/.test(c)) cols.org = ci;
-          else if(/상품|계좌|항목/.test(c)) cols.name = ci;
-          else if(/잔액|금액|평가액/.test(c)) cols.amount = ci;
-        });
-        break;
+    // "부채"라는 셀이 있는 행을 찾아 자산표/부채표의 경계 열을 알아낸다
+    var groupIdx = -1, assetStart = -1, debtStart = -1;
+    for(var g = startIdx + 1; g < Math.min(rows.length, startIdx + 10); g++){
+      var gr = rows[g];
+      for(var gc = 0; gc < gr.length; gc++){
+        var v = String(gr[gc] || '').trim();
+        if(v === '자산' && assetStart === -1) assetStart = gc;
+        if(v === '부채' && debtStart === -1) debtStart = gc;
       }
+      if(debtStart !== -1){ groupIdx = g; break; }
     }
-    if(headerIdx === -1 || cols.amount === undefined) return [];
+    if(groupIdx === -1 || debtStart === -1) return [];
+    if(assetStart === -1) assetStart = 0;
+
+    // 다음 줄(들)에서 "항목/상품명/금액" 하위 헤더를 찾는다
+    var subIdx = -1;
+    for(var h = groupIdx + 1; h < Math.min(rows.length, groupIdx + 5); h++){
+      var hr = rows[h];
+      if(hr.join('|').indexOf('항목') !== -1 && hr.join('|').indexOf('금액') !== -1){ subIdx = h; break; }
+    }
+    if(subIdx === -1) return [];
+
+    function findCol(row, from, to, label){
+      for(var c = from; c < to; c++){
+        if(String(row[c] || '').trim() === label) return c;
+      }
+      return -1;
+    }
+    var subRow = rows[subIdx];
+    var aItemCol = findCol(subRow, assetStart, debtStart, '항목');
+    var aNameCol = findCol(subRow, assetStart, debtStart, '상품명');
+    var aAmtCol = findCol(subRow, assetStart, debtStart, '금액');
+    var dItemCol = findCol(subRow, debtStart, subRow.length, '항목');
+    var dNameCol = findCol(subRow, debtStart, subRow.length, '상품명');
+    var dAmtCol = findCol(subRow, debtStart, subRow.length, '금액');
+    if(aAmtCol === -1 && dAmtCol === -1) return [];
 
     var out = [];
-    for(var k = headerIdx + 1; k < rows.length; k++){
+    for(var k = subIdx + 1; k < rows.length; k++){
       var row = rows[k];
       var rowText = row.join('').trim();
       if(!rowText) continue;
-      if(/^\s*[4-9]\./.test(rowText)) break;
+      if(/^총자산|^순자산/.test(rowText)) break;
+      if(/^\s*[4-9]\.\s*[가-힣]/.test(rowText)) break;
 
-      var name = (cols.name !== undefined ? row[cols.name] : '') || (cols.org !== undefined ? row[cols.org] : '') || '';
-      var typeRaw = cols.type !== undefined ? String(row[cols.type] || '') : '';
-      var amount = parseAmount(row[cols.amount]);
-      if(!name || isNaN(amount)) continue;
-
-      var isDebt = /부채|대출|카드|마이너스/.test(typeRaw) || /부채|대출/.test(String(name));
-      out.push({ name: String(name).trim(), type: isDebt ? 'debt' : 'asset', amount: Math.abs(amount), excluded: false });
+      if(aAmtCol !== -1){
+        var aItem = aItemCol !== -1 ? String(row[aItemCol] || '').trim() : '';
+        var aName = (aNameCol !== -1 ? String(row[aNameCol] || '').trim() : '') || aItem;
+        var aAmt = parseAmount(row[aAmtCol]);
+        if(aName && !isNaN(aAmt)){
+          out.push({ name: aName, type: 'asset', amount: Math.abs(aAmt), excluded: false });
+        }
+      }
+      if(dAmtCol !== -1){
+        var dItem = dItemCol !== -1 ? String(row[dItemCol] || '').trim() : '';
+        var dName = (dNameCol !== -1 ? String(row[dNameCol] || '').trim() : '') || dItem;
+        var dAmt = parseAmount(row[dAmtCol]);
+        if(dName && !isNaN(dAmt)){
+          out.push({ name: dName, type: 'debt', amount: Math.abs(dAmt), excluded: false });
+        }
+      }
     }
     return out;
   }
