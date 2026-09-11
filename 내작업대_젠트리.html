@@ -844,10 +844,20 @@ show((location.hash||'').replace(/^#\/?/,''));
     tbody.appendChild(rateRow);
     holding.months.forEach(function(m, mi){ updateRate(mi); });
 
+    var distTiming = (function(name){
+      name = name || '';
+      if(name.indexOf('코리아밸류업') !== -1 || name.indexOf('미국배당100') !== -1) return 'mid';
+      if(name.indexOf('팔란티어') !== -1) return 'end';
+      return 'both';
+    })(holding.name);
     var priceRowsDef = [
       { key: 'cm', label: '분배락 종가(월중)' },
       { key: 'ce', label: '분배락 종가(월말)' }
-    ];
+    ].filter(function(rd){
+      if(distTiming === 'mid') return rd.key === 'cm';
+      if(distTiming === 'end') return rd.key === 'ce';
+      return true;
+    });
     priceRowsDef.forEach(function(rd){ tbody.appendChild(buildInputRow(rd)); });
 
     table.appendChild(tbody);
