@@ -116,7 +116,7 @@ body.hide-money .money-sensitive,body.hide-money .moneytable{filter:blur(7px);po
 <div class="ex money-sensitive" style="border-color:var(--teal)">
 <div id="ldCategoryList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
 <div style="display:flex;align-items:center;gap:8px">
-<input id="ldNewCat" type="text" placeholder="항목 이름 (예: Hyundai(50))" style="flex:1;max-width:260px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit">
+<input id="ldNewCat" type="text" placeholder="항목 이름 (예: 현대카드(50))" style="flex:1;max-width:260px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit">
 <button id="ldAddCat" style="padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink-soft);font:inherit;font-size:9pt;cursor:pointer">+ 항목 추가</button>
 </div>
 </div>
@@ -475,8 +475,8 @@ show((location.hash||'').replace(/^#\/?/,''));
   function computeTotals(){
     var assetSum = 0, debtSum = 0;
     state.accounts.forEach(function(a){
-      if(a.excluded) return;
       if(a.type === 'debt') debtSum += a.amount; else assetSum += a.amount;
+      if(a.excluded) debtSum += a.amount; // 이건 남의 돈 → 갖고는 있지만 갚아야 할 빚으로도 잡아서 순자산에서 상쇄
     });
     sumAssetEl.textContent = fmt(assetSum);
     sumDebtEl.textContent = fmt(debtSum);
@@ -952,7 +952,7 @@ show((location.hash||'').replace(/^#\/?/,''));
   var tbody = document.getElementById('ldTableBody');
   var monthlyBody = document.getElementById('ldMonthlyBody');
 
-  var DEFAULT_CATEGORIES = ['Gukmin(80)', 'Hyundai(50)', 'Samsung(40)', 'Insurance+Pension', 'Communication', 'Utility bill', 'Withdrawal'];
+  var DEFAULT_CATEGORIES = ['국민카드(80)', '현대카드(50)', '삼성카드(40)', '보험+연금', '통신비', '공과금', '출금'];
 
   var state = load();
 
