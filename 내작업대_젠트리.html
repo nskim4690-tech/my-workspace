@@ -121,16 +121,27 @@ body.hide-money .money-sensitive,body.hide-money .moneytable{filter:blur(7px);po
 </div>
 </div>
 
-<div class="src money-sensitive" style="margin-top:14px"><b>새 기록 추가</b></div>
+<div class="src money-sensitive" style="margin-top:14px"><b>기록 추가 / 수정</b></div>
 <div class="ex money-sensitive" style="border-color:var(--copper)">
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
 <span style="font-size:9pt">날짜</span><input id="ldDate" type="date" style="padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit">
 <span style="font-size:9pt;margin-left:8px">수입</span><input id="ldIncome" type="number" min="0" style="width:160px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit">
+<label style="font-size:9pt;display:flex;align-items:center;gap:4px;margin-left:8px;color:#6b7280"><input id="ldEstimated" type="checkbox"> 예상치(미래 예측)</label>
 </div>
 <div id="ldCatInputs" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px"></div>
-<div style="display:flex;align-items:center;gap:8px">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
 <button id="ldAddRow" style="padding:6px 14px;border:0;border-radius:7px;background:var(--copper);color:#fff;font:inherit;cursor:pointer">기록 추가</button>
+<button id="ldCancelEdit" style="padding:6px 14px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink-soft);font:inherit;cursor:pointer;display:none">수정 취소</button>
 <span id="ldAddStatus" style="font-size:8.5pt;color:#6b7280"></span>
+</div>
+</div>
+
+<div class="src money-sensitive" style="margin-top:14px"><b>미래 예상치 한 번에 만들기</b> · 위 날짜부터 아래 종료일까지 매월 15일·말일마다 위 수입·지출 값을 반복해서 채웁니다 (이미 있는 날짜는 건너뜀)</div>
+<div class="ex money-sensitive" style="border-color:var(--teal)">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:9pt">예상 종료일</span><input id="ldProjectEnd" type="date" value="2033-12-31" style="padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit">
+<button id="ldProjectBtn" style="padding:6px 14px;border:1px solid var(--teal);border-radius:7px;background:#fff;color:var(--teal);font:inherit;cursor:pointer">위 값으로 예상치 채우기</button>
+<span id="ldProjectStatus" style="font-size:8.5pt;color:#6b7280"></span>
 </div>
 </div>
 
@@ -945,12 +956,18 @@ show((location.hash||'').replace(/^#\/?/,''));
   var startBalanceIn = document.getElementById('ldStartBalance');
   var dateIn = document.getElementById('ldDate');
   var incomeIn = document.getElementById('ldIncome');
+  var estimatedIn = document.getElementById('ldEstimated');
   var catInputsBox = document.getElementById('ldCatInputs');
   var addRowBtn = document.getElementById('ldAddRow');
+  var cancelEditBtn = document.getElementById('ldCancelEdit');
   var addStatus = document.getElementById('ldAddStatus');
+  var projectEndIn = document.getElementById('ldProjectEnd');
+  var projectBtn = document.getElementById('ldProjectBtn');
+  var projectStatus = document.getElementById('ldProjectStatus');
   var thead = document.getElementById('ldThead');
   var tbody = document.getElementById('ldTableBody');
   var monthlyBody = document.getElementById('ldMonthlyBody');
+  var editingId = null;
 
   var DEFAULT_CATEGORIES = ['국민카드(80)', '현대카드(50)', '삼성카드(40)', '보험+연금', '통신비', '공과금', '출금'];
 
@@ -1029,17 +1046,36 @@ show((location.hash||'').replace(/^#\/?/,''));
     }
     var rowsHtml = computed.slice().reverse().map(function(c){
       var row = c.row;
-      var cells = ['<td>' + esc(row.date) + '</td>', '<td class="c">' + fmt(row.income) + '</td>'];
+      var trStyle = row.estimated ? ' style="background:#fffaf3"' : '';
+      var dateLabel = esc(row.date) + (row.estimated ? ' <span style="color:var(--copper);font-size:7.5pt;font-weight:bold">예상</span>' : '');
+      var cells = ['<td>' + dateLabel + '</td>', '<td class="c">' + fmt(row.income) + '</td>'];
       state.categories.forEach(function(cat){
         var v = row.values[cat];
         cells.push('<td class="c">' + (v ? fmt(v) : '<span style="color:#d1d5db">—</span>') + '</td>');
       });
       cells.push('<td class="c">' + fmt(c.total) + '</td>');
       cells.push('<td class="c" style="font-weight:bold">' + fmt(c.balance) + '</td>');
-      cells.push('<td class="c"><button data-id="' + esc(row.id) + '" class="ld-row-del" style="border:0;background:none;color:var(--red);cursor:pointer;font:inherit;font-size:8pt">삭제</button></td>');
-      return '<tr>' + cells.join('') + '</tr>';
+      cells.push('<td class="c"><button data-id="' + esc(row.id) + '" class="ld-row-edit" style="border:0;background:none;color:var(--teal);cursor:pointer;font:inherit;font-size:8pt;margin-right:6px">수정</button><button data-id="' + esc(row.id) + '" class="ld-row-del" style="border:0;background:none;color:var(--red);cursor:pointer;font:inherit;font-size:8pt">삭제</button></td>');
+      return '<tr' + trStyle + '>' + cells.join('') + '</tr>';
     });
     tbody.innerHTML = rowsHtml.join('');
+    tbody.querySelectorAll('.ld-row-edit').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.dataset.id;
+        var row = state.rows.find(function(r){ return String(r.id) === id; });
+        if(!row) return;
+        editingId = row.id;
+        dateIn.value = row.date;
+        incomeIn.value = row.income || '';
+        estimatedIn.checked = !!row.estimated;
+        catInputsBox.querySelectorAll('.ld-cat-input').forEach(function(inp){
+          inp.value = (row.values && row.values[inp.dataset.cat]) || '';
+        });
+        addRowBtn.textContent = '수정 저장';
+        cancelEditBtn.style.display = '';
+        addStatus.textContent = '"' + row.date + '" 기록 수정 중';
+      });
+    });
     tbody.querySelectorAll('.ld-row-del').forEach(function(btn){
       btn.addEventListener('click', function(){
         if(!confirm('이 기록을 삭제할까요?')) return;
@@ -1091,6 +1127,19 @@ show((location.hash||'').replace(/^#\/?/,''));
     renderMonthly();
   });
 
+  function clearFormForNext(){
+    incomeIn.value = '';
+    estimatedIn.checked = false;
+    catInputsBox.querySelectorAll('.ld-cat-input').forEach(function(inp){ inp.value = ''; });
+  }
+  function resetFormFull(){
+    editingId = null;
+    dateIn.value = '';
+    clearFormForNext();
+    addRowBtn.textContent = '기록 추가';
+    cancelEditBtn.style.display = 'none';
+  }
+
   addRowBtn.addEventListener('click', function(){
     if(!dateIn.value){ alert('날짜를 선택해주세요.'); dateIn.focus(); return; }
     var values = {};
@@ -1098,12 +1147,73 @@ show((location.hash||'').replace(/^#\/?/,''));
       var v = Number(inp.value) || 0;
       if(v) values[inp.dataset.cat] = v;
     });
-    var row = { id: Date.now() + '_' + Math.random().toString(36).slice(2), date: dateIn.value, income: Number(incomeIn.value) || 0, values: values };
-    state.rows.push(row);
+    if(editingId){
+      var target = state.rows.find(function(r){ return r.id === editingId; });
+      if(target){
+        target.date = dateIn.value;
+        target.income = Number(incomeIn.value) || 0;
+        target.values = values;
+        target.estimated = estimatedIn.checked;
+      }
+      save();
+      addStatus.textContent = '수정됨 · ' + new Date().toLocaleTimeString('ko-KR');
+      resetFormFull();
+    } else {
+      var row = { id: Date.now() + '_' + Math.random().toString(36).slice(2), date: dateIn.value, income: Number(incomeIn.value) || 0, values: values, estimated: estimatedIn.checked };
+      state.rows.push(row);
+      save();
+      addStatus.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
+      clearFormForNext();
+    }
+    renderTable();
+    renderMonthly();
+  });
+
+  cancelEditBtn.addEventListener('click', function(){
+    resetFormFull();
+    addStatus.textContent = '';
+  });
+
+  function nextHalfMonthDates(fromStr, toStr){
+    var from = new Date(fromStr + 'T00:00:00');
+    var to = new Date(toStr + 'T00:00:00');
+    var dates = [];
+    var y = from.getFullYear(), m = from.getMonth();
+    while(new Date(y, m, 1) <= to){
+      var last = new Date(y, m + 1, 0).getDate();
+      [15, last].forEach(function(d){
+        var dt = new Date(y, m, d);
+        if(dt > from && dt <= to){
+          dates.push(dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0'));
+        }
+      });
+      m++;
+      if(m > 11){ m = 0; y++; }
+    }
+    dates.sort();
+    return dates;
+  }
+
+  projectBtn.addEventListener('click', function(){
+    if(!dateIn.value){ alert('먼저 위에서 기준 날짜를 선택해주세요 (예상치를 채우기 시작할 기준일).'); dateIn.focus(); return; }
+    if(!projectEndIn.value){ alert('예상 종료일을 선택해주세요.'); projectEndIn.focus(); return; }
+    var values = {};
+    catInputsBox.querySelectorAll('.ld-cat-input').forEach(function(inp){
+      var v = Number(inp.value) || 0;
+      if(v) values[inp.dataset.cat] = v;
+    });
+    var income = Number(incomeIn.value) || 0;
+    var dates = nextHalfMonthDates(dateIn.value, projectEndIn.value);
+    var existing = {};
+    state.rows.forEach(function(r){ existing[r.date] = true; });
+    var added = 0;
+    dates.forEach(function(d){
+      if(existing[d]) return;
+      state.rows.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2) + '_' + d, date: d, income: income, values: JSON.parse(JSON.stringify(values)), estimated: true });
+      added++;
+    });
     save();
-    incomeIn.value = '';
-    catInputsBox.querySelectorAll('.ld-cat-input').forEach(function(inp){ inp.value = ''; });
-    addStatus.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
+    projectStatus.textContent = added + '개 예상 기록 생성됨 · ' + new Date().toLocaleTimeString('ko-KR');
     renderTable();
     renderMonthly();
   });
