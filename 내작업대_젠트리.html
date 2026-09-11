@@ -109,7 +109,10 @@ body.hide-money .money-sensitive,body.hide-money .moneytable{filter:blur(7px);po
 <div id="ivAccounts" class="money-sensitive"></div>
 </section><section class="scr" data-cell="ledger"><div class="ch"><h2>📒 가계부</h2><span class="dot"></span></div><p class="what">날짜별로 수입·지출을 적으면 잔액이 자동으로 계산됩니다.</p><div class="note warn">🔒 <b>이 표는 이 브라우저에만 저장됩니다.</b> 서버베이스에도, 어디에도 보내지 않습니다. 다른 컴퓨터에서는 다시 입력해야 합니다.</div>
 
-<div class="src money-sensitive"><b>시작 잔액</b> · 첫 기록 이전에 이미 있던 잔액</div>
+<div class="src"><b>엑셀에서 가져오기</b> · 시트 이름이 "25년", "33년"처럼 "N년"인 연도별 가계부 파일</div>
+<div class="ex money-sensitive" style="border-color:var(--teal)"><input type="file" id="ldFile" accept=".xlsx,.xls"><div id="ldFileStatus" style="font-size:8.5pt;color:#6b7280;margin-top:6px"></div></div>
+
+<div class="src money-sensitive" style="margin-top:14px"><b>시작 잔액</b> · 첫 기록 이전에 이미 있던 잔액</div>
 <div class="ex money-sensitive" style="border-color:var(--navy)"><input id="ldStartBalance" type="number" min="0" placeholder="시작 잔액 (원)" style="width:220px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit"></div>
 
 <div class="src" style="margin-top:14px"><b>지출 항목</b> · 카드·보험 등 내가 쓰는 항목을 직접 정하세요</div>
@@ -951,6 +954,8 @@ show((location.hash||'').replace(/^#\/?/,''));
   var STORAGE_KEY = 'gentree-ledger-v1';
   var catList = document.getElementById('ldCategoryList');
   if(!catList) return;
+  var fileIn = document.getElementById('ldFile');
+  var fileStatus = document.getElementById('ldFileStatus');
   var newCatIn = document.getElementById('ldNewCat');
   var addCatBtn = document.getElementById('ldAddCat');
   var startBalanceIn = document.getElementById('ldStartBalance');
@@ -1217,6 +1222,102 @@ show((location.hash||'').replace(/^#\/?/,''));
     renderTable();
     renderMonthly();
   });
+
+  function parseLedgerWorkbook(wb){
+    var yearSheetRe = /^(\d{2})년/;
+    var allCategories = [];
+    var allRows = [];
+    var todayStr = new Date().toISOString().slice(0, 10);
+    wb.SheetNames.forEach(function(name){
+      var m = name.match(yearSheetRe);
+      if(!m) return;
+      var year = 2000 + parseInt(m[1], 10);
+      var rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: null });
+      var headerIdx = -1;
+      for(var i = 0; i < Math.min(rows.length, 10); i++){
+        if(rows[i] && String(rows[i][0] || '').trim() === 'Date' && String(rows[i][1] || '').trim() === 'Income'){ headerIdx = i; break; }
+      }
+      if(headerIdx === -1) return;
+      var header = rows[headerIdx];
+      var remainderIdx = header.findIndex(function(h){ return String(h || '').trim() === 'Remainder'; });
+      if(remainderIdx === -1) remainderIdx = header.length;
+      var catCols = [];
+      for(var c = 2; c < remainderIdx; c++){
+        var label = String(header[c] || '').replace(/[\r\n]+/g, '').trim();
+        if(label){
+          catCols.push({ idx: c, name: label });
+          if(allCategories.indexOf(label) === -1) allCategories.push(label);
+        }
+      }
+      for(var r = headerIdx + 1; r < rows.length; r++){
+        var row = rows[r];
+        if(!row) continue;
+        var dcell = row[0];
+        var dstr = null;
+        if(typeof dcell === 'number'){
+          var month = Math.floor(dcell);
+          var day = Math.round((dcell - month) * 100);
+          if(month >= 1 && month <= 12 && day >= 1 && day <= 31) dstr = month + '.' + day;
+        } else if(typeof dcell === 'string' && /^\d{1,2}\.\d{1,2}$/.test(dcell.trim())){
+          dstr = dcell.trim();
+        }
+        if(!dstr) continue;
+        var parts = dstr.split('.');
+        var full = year + '-' + String(parts[0]).padStart(2, '0') + '-' + String(parts[1]).padStart(2, '0');
+        var income = Number(row[1]) || 0;
+        var values = {};
+        catCols.forEach(function(cc){
+          var v = row[cc.idx];
+          if(typeof v === 'number' && v) values[cc.name] = v;
+        });
+        allRows.push({ date: full, income: income, values: values, estimated: full >= todayStr });
+      }
+    });
+    return { categories: allCategories, rows: allRows };
+  }
+
+  if(fileIn){
+    fileIn.addEventListener('change', function(){
+      var file = fileIn.files[0];
+      if(!file) return;
+      fileStatus.textContent = '읽는 중...';
+      var reader = new FileReader();
+      reader.onload = function(e){
+        try{
+          var data = new Uint8Array(e.target.result);
+          var wb = XLSX.read(data, { type: 'array' });
+          var parsed = parseLedgerWorkbook(wb);
+          if(!parsed.rows.length){
+            fileStatus.innerHTML = '<span style="color:var(--red)">가져올 데이터를 찾지 못했습니다. 시트 이름이 "25년"처럼 "N년" 형식이고, 그 안에 Date/Income 헤더가 있는지 확인해주세요.</span>';
+            return;
+          }
+          var isUntouchedDefault = !state.rows.length && state.categories.length === DEFAULT_CATEGORIES.length && state.categories.every(function(c, i){ return c === DEFAULT_CATEGORIES[i]; });
+          if(isUntouchedDefault){
+            state.categories = parsed.categories.slice();
+          } else {
+            parsed.categories.forEach(function(c){ if(state.categories.indexOf(c) === -1) state.categories.push(c); });
+          }
+          var existing = {};
+          state.rows.forEach(function(r){ existing[r.date] = true; });
+          var added = 0, skipped = 0;
+          parsed.rows.forEach(function(row){
+            if(existing[row.date]){ skipped++; return; }
+            row.id = Date.now() + '_' + Math.random().toString(36).slice(2) + '_' + row.date;
+            state.rows.push(row);
+            existing[row.date] = true;
+            added++;
+          });
+          save();
+          fileStatus.textContent = added + '개 기록을 가져왔습니다 (겹치는 날짜 ' + skipped + '개는 건너뜀) · ' + new Date().toLocaleTimeString('ko-KR');
+          renderAll();
+        }catch(err){
+          console.error(err);
+          fileStatus.innerHTML = '<span style="color:var(--red)">파일을 읽을 수 없습니다. 엑셀(.xlsx) 파일인지 확인해주세요.</span>';
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
 
   function renderAll(){
     renderCategories();
