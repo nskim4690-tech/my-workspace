@@ -973,6 +973,7 @@ show((location.hash||'').replace(/^#\/?/,''));
   var tbody = document.getElementById('ldTableBody');
   var monthlyBody = document.getElementById('ldMonthlyBody');
   var editingId = null;
+  var collapsedYears = {};
 
   var DEFAULT_CATEGORIES = ['국민카드(80)', '현대카드(50)', '삼성카드(40)', '보험+연금', '통신비', '공과금', '출금'];
 
@@ -1045,12 +1046,25 @@ show((location.hash||'').replace(/^#\/?/,''));
   function renderTable(){
     renderThead();
     var computed = computeRows();
+    var colCount = 5 + state.categories.length;
     if(!computed.length){
-      tbody.innerHTML = '<tr><td colspan="' + (5 + state.categories.length) + '" style="color:#9ca3af">아직 기록이 없습니다</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="' + colCount + '" style="color:#9ca3af">아직 기록이 없습니다</td></tr>';
       return;
     }
-    var rowsHtml = computed.slice().reverse().map(function(c){
+    var reversed = computed.slice().reverse();
+    var htmlParts = [];
+    var currentYear = null;
+    reversed.forEach(function(c){
       var row = c.row;
+      var year = row.date.slice(0, 4);
+      if(year !== currentYear){
+        currentYear = year;
+        var yearCount = reversed.filter(function(x){ return x.row.date.slice(0, 4) === year; }).length;
+        var collapsed = !!collapsedYears[year];
+        htmlParts.push('<tr class="ld-year-header" style="background:#eef2f6"><td colspan="' + colCount + '"><button class="ld-year-toggle" data-year="' + year + '" style="border:0;background:none;cursor:pointer;font:inherit;font-weight:bold;color:var(--navy);padding:4px 0;width:100%;text-align:left">'
+          + (collapsed ? '▶' : '▼') + ' ' + year + '년 (' + yearCount + '건)</button></td></tr>');
+      }
+      if(collapsedYears[year]) return;
       var trStyle = row.estimated ? ' style="background:#fffaf3"' : '';
       var dateLabel = esc(row.date) + (row.estimated ? ' <span style="color:var(--copper);font-size:7.5pt;font-weight:bold">예상</span>' : '');
       var cells = ['<td>' + dateLabel + '</td>', '<td class="c">' + fmt(row.income) + '</td>'];
@@ -1061,9 +1075,16 @@ show((location.hash||'').replace(/^#\/?/,''));
       cells.push('<td class="c">' + fmt(c.total) + '</td>');
       cells.push('<td class="c" style="font-weight:bold">' + fmt(c.balance) + '</td>');
       cells.push('<td class="c"><button data-id="' + esc(row.id) + '" class="ld-row-edit" style="border:0;background:none;color:var(--teal);cursor:pointer;font:inherit;font-size:8pt;margin-right:6px">수정</button><button data-id="' + esc(row.id) + '" class="ld-row-del" style="border:0;background:none;color:var(--red);cursor:pointer;font:inherit;font-size:8pt">삭제</button></td>');
-      return '<tr' + trStyle + '>' + cells.join('') + '</tr>';
+      htmlParts.push('<tr' + trStyle + '>' + cells.join('') + '</tr>');
     });
-    tbody.innerHTML = rowsHtml.join('');
+    tbody.innerHTML = htmlParts.join('');
+    tbody.querySelectorAll('.ld-year-toggle').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var year = btn.dataset.year;
+        collapsedYears[year] = !collapsedYears[year];
+        renderTable();
+      });
+    });
     tbody.querySelectorAll('.ld-row-edit').forEach(function(btn){
       btn.addEventListener('click', function(){
         var id = btn.dataset.id;
