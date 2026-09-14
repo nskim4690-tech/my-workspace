@@ -121,7 +121,9 @@ body.hide-money .money-sensitive,body.hide-money .moneytable{filter:blur(7px);po
 <div style="display:flex;align-items:center;gap:8px">
 <input id="ldNewCat" type="text" placeholder="항목 이름 (예: 현대카드(50))" style="flex:1;max-width:260px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit">
 <button id="ldAddCat" style="padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink-soft);font:inherit;font-size:9pt;cursor:pointer">+ 항목 추가</button>
+<button id="ldCleanupCat" style="padding:6px 12px;border:1px solid var(--copper);border-radius:6px;background:#fff;color:var(--copper);font:inherit;font-size:9pt;cursor:pointer">🧹 개인지출내역 기준으로 정리</button>
 </div>
+<div style="font-size:8pt;color:#9ca3af;margin-top:6px">같은 카드를 가리키는 다른 이름(Gukmin(80), 현대카드 등)은 금액을 합쳐서 하나로 정리하고, 카드와 상관없는 예전 분류(식비·교통 등)는 정리 버튼을 누르면 지워집니다.</div>
 </div>
 
 <div class="src money-sensitive" style="margin-top:14px"><b>기록 추가 / 수정</b></div>
@@ -958,6 +960,7 @@ show((location.hash||'').replace(/^#\/?/,''));
   var fileStatus = document.getElementById('ldFileStatus');
   var newCatIn = document.getElementById('ldNewCat');
   var addCatBtn = document.getElementById('ldAddCat');
+  var cleanupCatBtn = document.getElementById('ldCleanupCat');
   var startBalanceIn = document.getElementById('ldStartBalance');
   var dateIn = document.getElementById('ldDate');
   var incomeIn = document.getElementById('ldIncome');
@@ -1145,6 +1148,23 @@ show((location.hash||'').replace(/^#\/?/,''));
     renderAll();
   });
 
+  cleanupCatBtn.addEventListener('click', function(){
+    if(!confirm('지금 있는 항목을 "개인지출내역" 기준(국민(80)/현대(50)/삼성(80)/보험+연금/통신비/Education/공과금/대출금/출금)으로 정리할까요?\n\n같은 카드를 가리키는 다른 이름은 금액을 합쳐서 하나로 통일되고, 카드와 상관없는 예전 분류(식비/교통 등)는 삭제됩니다. 되돌릴 수 없습니다.')) return;
+    state.rows.forEach(function(row){
+      var newValues = {};
+      Object.keys(row.values || {}).forEach(function(k){
+        var canonical = normalizeCategory(k);
+        if(CANONICAL_CATEGORIES.indexOf(canonical) === -1) return;
+        newValues[canonical] = (newValues[canonical] || 0) + (Number(row.values[k]) || 0);
+      });
+      row.values = newValues;
+    });
+    state.categories = CANONICAL_CATEGORIES.slice();
+    save();
+    renderAll();
+    alert('정리했습니다.');
+  });
+
   startBalanceIn.value = state.startBalance || '';
   startBalanceIn.addEventListener('input', function(){
     state.startBalance = Number(startBalanceIn.value) || 0;
@@ -1245,14 +1265,15 @@ show((location.hash||'').replace(/^#\/?/,''));
   });
 
   var CATEGORY_ALIAS_MAP = {
-    'Gukmin(80)': '국민(80)', '국민': '국민(80)',
-    'Hyundai(50)': '현대(50)',
-    'Samsung(40)': '삼성(80)', '삼성(40)': '삼성(80)',
+    'Gukmin(80)': '국민(80)', '국민': '국민(80)', '국민카드': '국민(80)',
+    'Hyundai(50)': '현대(50)', '현대카드': '현대(50)',
+    'Samsung(40)': '삼성(80)', '삼성(40)': '삼성(80)', '삼성카드': '삼성(80)',
     'Insurance+Pension': '보험+연금',
     'Communication': '통신비', '통신비(인터넷)': '통신비', '통신비(핸드폰+인터넷)': '통신비', '통신비(핸드폰+인터넷통합)': '통신비',
     'Utility bill': '공과금',
     'Withdrawal': '출금', '현금출금': '출금'
   };
+  var CANONICAL_CATEGORIES = ['국민(80)', '현대(50)', '삼성(80)', '보험+연금', '통신비', 'Education', '공과금', '대출금', '출금'];
   function normalizeCategory(label){
     return CATEGORY_ALIAS_MAP[label] || label;
   }
