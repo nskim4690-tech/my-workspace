@@ -109,7 +109,7 @@ body.hide-money .money-sensitive,body.hide-money .moneytable{filter:blur(7px);po
 <div id="ivAccounts" class="money-sensitive"></div>
 </section><section class="scr" data-cell="ledger"><div class="ch"><h2>📒 가계부</h2><span class="dot"></span></div><p class="what">날짜별로 수입·지출을 적으면 잔액이 자동으로 계산됩니다.</p><div class="note warn">🔒 <b>이 표는 이 브라우저에만 저장됩니다.</b> 서버베이스에도, 어디에도 보내지 않습니다. 다른 컴퓨터에서는 다시 입력해야 합니다.</div>
 
-<div class="src"><b>엑셀에서 가져오기</b> · 시트 이름이 "25년", "33년"처럼 "N년"인 연도별 가계부 파일</div>
+<div class="src"><b>엑셀에서 가져오기</b> · "N년" 형식의 연도별 가계부 파일 또는 뱅크샐러드에서 내려받은 파일을 그대로 올리면 자동으로 알아서 읽습니다</div>
 <div class="ex money-sensitive" style="border-color:var(--teal)"><input type="file" id="ldFile" accept=".xlsx,.xls"><div id="ldFileStatus" style="font-size:8.5pt;color:#6b7280;margin-top:6px"></div></div>
 
 <div class="src money-sensitive" style="margin-top:14px"><b>시작 잔액</b> · 첫 기록 이전에 이미 있던 잔액</div>
@@ -1297,6 +1297,60 @@ show((location.hash||'').replace(/^#\/?/,''));
     return { categories: allCategories, rows: allRows };
   }
 
+  function parseBankSaladCashflow(wb){
+    var sheetName = wb.SheetNames.find(function(n){ return n.indexOf('뱅샐현황') !== -1; });
+    if(!sheetName) return null;
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: null });
+    var headerIdx = -1, itemIdx = -1;
+    for(var i = 0; i < rows.length; i++){
+      var r = rows[i];
+      if(!r) continue;
+      for(var ci = 0; ci < r.length; ci++){
+        if(String(r[ci] || '').trim() === '항목' && String(r[ci + 1] || '').trim() === '총계'){ headerIdx = i; itemIdx = ci; break; }
+      }
+      if(headerIdx !== -1) break;
+    }
+    if(headerIdx === -1) return null;
+    var header = rows[headerIdx];
+    var monthCols = [];
+    for(var c = itemIdx + 3; c < header.length; c++){
+      var label = String(header[c] || '').trim();
+      if(/^\d{4}-\d{2}$/.test(label)) monthCols.push({ idx: c, label: label });
+    }
+    if(!monthCols.length) return null;
+
+    var incomeRow = null;
+    var expenseRows = [];
+    var inExpenseZone = false;
+    for(var r2 = headerIdx + 1; r2 < rows.length; r2++){
+      var row = rows[r2];
+      if(!row) continue;
+      var label2 = String(row[itemIdx] || '').trim();
+      if(!label2) continue;
+      if(label2 === '월수입 총계'){ incomeRow = row; inExpenseZone = true; continue; }
+      if(label2 === '월지출 총계') break;
+      if(inExpenseZone) expenseRows.push({ name: label2, row: row });
+    }
+    if(!incomeRow) return null;
+
+    var categories = expenseRows.map(function(e){ return e.name; });
+    var ledgerRows = [];
+    monthCols.forEach(function(mc){
+      var parts = mc.label.split('-');
+      var year = parseInt(parts[0], 10), month = parseInt(parts[1], 10);
+      var lastDay = new Date(year, month, 0).getDate();
+      var dateStr = mc.label + '-' + String(lastDay).padStart(2, '0');
+      var income = Number(incomeRow[mc.idx]) || 0;
+      var values = {};
+      expenseRows.forEach(function(e){
+        var v = e.row[mc.idx];
+        if(typeof v === 'number' && v) values[e.name] = v;
+      });
+      ledgerRows.push({ date: dateStr, income: income, values: values, estimated: false });
+    });
+    return { categories: categories, rows: ledgerRows };
+  }
+
   if(fileIn){
     fileIn.addEventListener('change', function(){
       var file = fileIn.files[0];
@@ -1307,9 +1361,14 @@ show((location.hash||'').replace(/^#\/?/,''));
         try{
           var data = new Uint8Array(e.target.result);
           var wb = XLSX.read(data, { type: 'array' });
-          var parsed = parseLedgerWorkbook(wb);
-          if(!parsed.rows.length){
-            fileStatus.innerHTML = '<span style="color:var(--red)">가져올 데이터를 찾지 못했습니다. 시트 이름이 "25년"처럼 "N년" 형식이고, 그 안에 Date/Income 헤더가 있는지 확인해주세요.</span>';
+          var parsed = null;
+          if(wb.SheetNames.some(function(n){ return /^\d{2}년/.test(n); })){
+            parsed = parseLedgerWorkbook(wb);
+          } else if(wb.SheetNames.indexOf('뱅샐현황') !== -1){
+            parsed = parseBankSaladCashflow(wb);
+          }
+          if(!parsed || !parsed.rows.length){
+            fileStatus.innerHTML = '<span style="color:var(--red)">가져올 데이터를 찾지 못했습니다. 시트 이름이 "25년"처럼 "N년" 형식이거나, 뱅크샐러드에서 내려받은 "뱅샐현황" 시트가 있는 파일인지 확인해주세요.</span>';
             return;
           }
           var isUntouchedDefault = !state.rows.length && state.categories.length === DEFAULT_CATEGORIES.length && state.categories.every(function(c, i){ return c === DEFAULT_CATEGORIES[i]; });
