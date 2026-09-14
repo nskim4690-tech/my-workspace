@@ -1149,7 +1149,7 @@ show((location.hash||'').replace(/^#\/?/,''));
   });
 
   cleanupCatBtn.addEventListener('click', function(){
-    if(!confirm('지금 있는 항목을 "개인지출내역" 기준(국민(80)/현대(50)/삼성(80)/보험+연금/통신비/Education/공과금/대출금/출금)으로 정리할까요?\n\n같은 카드를 가리키는 다른 이름은 금액을 합쳐서 하나로 통일되고, 카드와 상관없는 예전 분류(식비/교통 등)는 삭제됩니다. 되돌릴 수 없습니다.')) return;
+    if(!confirm('지금 있는 항목을 "개인지출내역" 기준(국민(80)/현대(50)/삼성(80)/보험+연금/통신비/교육비/공과금/대출금/출금)으로 정리할까요?\n\n같은 카드를 가리키는 다른 이름은 금액을 합쳐서 하나로 통일되고, 카드와 상관없는 예전 분류(식비/교통 등)는 삭제됩니다. 되돌릴 수 없습니다.')) return;
     state.rows.forEach(function(row){
       var newValues = {};
       Object.keys(row.values || {}).forEach(function(k){
@@ -1271,9 +1271,10 @@ show((location.hash||'').replace(/^#\/?/,''));
     'Insurance+Pension': '보험+연금',
     'Communication': '통신비', '통신비(인터넷)': '통신비', '통신비(핸드폰+인터넷)': '통신비', '통신비(핸드폰+인터넷통합)': '통신비',
     'Utility bill': '공과금',
+    'Education': '교육비',
     'Withdrawal': '출금', '현금출금': '출금'
   };
-  var CANONICAL_CATEGORIES = ['국민(80)', '현대(50)', '삼성(80)', '보험+연금', '통신비', 'Education', '공과금', '대출금', '출금'];
+  var CANONICAL_CATEGORIES = ['국민(80)', '현대(50)', '삼성(80)', '보험+연금', '통신비', '교육비', '공과금', '대출금', '출금'];
   function normalizeCategory(label){
     return CATEGORY_ALIAS_MAP[label] || label;
   }
