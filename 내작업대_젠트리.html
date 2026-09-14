@@ -192,174 +192,142 @@ show((location.hash||'').replace(/^#\/?/,''));
 </script>
 <script>
 (function(){
-  var SUPABASE_URL = 'https://hweakxelagggawyuhpjl.supabase.co';
-  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3ZWFreGVsYWdnZ2F3eXVocGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMDUwNjYsImV4cCI6MjEwMzc4MTA2Nn0.pniv8uWhvE2J6ZJsWmLDypjBlIvwVyNtFpe_REXAR9o';
-  var dateIn = document.getElementById('stDate');
-  var contentIn = document.getElementById('stContent');
-  var saveBtn = document.getElementById('stSave');
-  var status = document.getElementById('stStatus');
-  var list = document.getElementById('stList');
-  if(!saveBtn) return;
+  var dbPromise = (window.claude && window.claude.use) ? window.claude.use('db') : Promise.resolve(null);
 
   function esc(s){
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  function headers(extra){
-    var h = {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-      'Content-Type': 'application/json'
-    };
-    for(var k in (extra||{})) h[k]=extra[k];
-    return h;
-  }
+  // ---- 공부방 (study notes) ----
+  (function(){
+    var dateIn = document.getElementById('stDate');
+    var contentIn = document.getElementById('stContent');
+    var saveBtn = document.getElementById('stSave');
+    var status = document.getElementById('stStatus');
+    var list = document.getElementById('stList');
+    if(!saveBtn) return;
 
-  function loadList(){
-    fetch(SUPABASE_URL + '/rest/v1/study_notes?select=note_date,content&note_date=not.is.null&order=note_date.desc', {headers: headers()})
-      .then(function(r){ return r.json(); })
-      .then(function(rows){
-        if(!rows || !rows.length){ list.innerHTML = '<p style="color:#9ca3af;font-size:9pt">아직 기록이 없습니다</p>'; return; }
-        list.innerHTML = rows.map(function(row){
-          return '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 14px">'
-            + '<div style="font-weight:bold;color:var(--navy);margin-bottom:6px">'+esc(row.note_date)+'</div>'
-            + '<div style="font-size:9.5pt;white-space:pre-line">'+esc(row.content)+'</div>'
-            + '</div>';
-        }).join('');
-      })
-      .catch(function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패 — 콘솔(F12) 확인</p>'; });
-  }
-  loadList();
+    function render(rows){
+      if(!rows.length){ list.innerHTML = '<p style="color:#9ca3af;font-size:9pt">아직 기록이 없습니다</p>'; return; }
+      list.innerHTML = rows.map(function(row){
+        return '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 14px">'
+          + '<div style="font-weight:bold;color:var(--navy);margin-bottom:6px">'+esc(row.note_date)+'</div>'
+          + '<div style="font-size:9.5pt;white-space:pre-line">'+esc(row.content)+'</div>'
+          + '</div>';
+      }).join('');
+    }
 
-  saveBtn.addEventListener('click', function(){
-    if(!dateIn.value){ alert('날짜를 선택해주세요.'); dateIn.focus(); return; }
-    status.textContent = '저장 중...';
-    fetch(SUPABASE_URL + '/rest/v1/study_notes', {
-      method: 'POST',
-      headers: headers({'Prefer':'return=minimal'}),
-      body: JSON.stringify({ note_date: dateIn.value, content: contentIn.value })
-    }).then(function(r){
-      if(r.ok){
-        status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
-        contentIn.value = '';
-        loadList();
-      } else {
-        r.text().then(function(t){ status.textContent = '저장 실패 (' + r.status + ')'; console.error(t); });
-      }
-    }).catch(function(){ status.textContent = '저장 실패 — 콘솔(F12) 확인'; });
-  });
-})();
-</script>
-<script>
-(function(){
-  var SUPABASE_URL = 'https://hweakxelagggawyuhpjl.supabase.co';
-  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3ZWFreGVsYWdnZ2F3eXVocGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMDUwNjYsImV4cCI6MjEwMzc4MTA2Nn0.pniv8uWhvE2J6ZJsWmLDypjBlIvwVyNtFpe_REXAR9o';
-  var postsIn = document.getElementById('mktPosts');
-  var likesIn = document.getElementById('mktLikes');
-  var visitsIn = document.getElementById('mktVisits');
-  var saveBtn = document.getElementById('mktSave');
-  var status = document.getElementById('mktStatus');
-  var histBody = document.getElementById('mktHistBody');
-  if(!saveBtn) return;
+    dbPromise.then(function(db){
+      if(!db){ list.innerHTML = '<p style="color:#9ca3af;font-size:9pt">저장 기능을 지금은 쓸 수 없습니다</p>'; return; }
+      var col = db.collection('study_notes');
+      col.orderBy('created_at','desc').limit(50).onSnapshot(function(snap){
+        render(snap.docs.map(function(d){ return d.data(); }));
+      }, function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패</p>'; });
 
-  function headers(extra){
-    var h = {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-      'Content-Type': 'application/json'
-    };
-    for(var k in (extra||{})) h[k]=extra[k];
-    return h;
-  }
+      saveBtn.addEventListener('click', function(){
+        if(!dateIn.value){ alert('날짜를 선택해주세요.'); dateIn.focus(); return; }
+        status.textContent = '저장 중...';
+        col.add({ note_date: dateIn.value, content: contentIn.value, created_at: Date.now() })
+          .then(function(){
+            status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
+            contentIn.value = '';
+          })
+          .catch(function(e){ status.textContent = '저장 실패'; console.error(e); });
+      });
+    });
+  })();
 
-  function loadHistory(){
-    fetch(SUPABASE_URL + '/rest/v1/marketing_stats?select=week_label,insta_posts,insta_likes,site_visits&order=created_at.desc&limit=20', {headers: headers()})
-      .then(function(r){ return r.json(); })
-      .then(function(rows){
-        if(!rows || !rows.length){ histBody.innerHTML = '<tr><td colspan="4" style="color:#9ca3af">아직 기록이 없습니다</td></tr>'; return; }
-        histBody.innerHTML = rows.map(function(row){
-          return '<tr><td>'+(row.week_label||'')+'</td><td class="c">'+(row.insta_posts==null?'-':row.insta_posts)+'</td><td class="c">'+(row.insta_likes==null?'-':row.insta_likes)+'</td><td class="c">'+(row.site_visits==null?'-':row.site_visits)+'</td></tr>';
-        }).join('');
-      })
-      .catch(function(){ histBody.innerHTML = '<tr><td colspan="4" style="color:#b3503a">불러오기 실패 — 콘솔(F12) 확인</td></tr>'; });
-  }
-  loadHistory();
+  // ---- 마케팅 대시보드 (marketing stats) ----
+  (function(){
+    var postsIn = document.getElementById('mktPosts');
+    var likesIn = document.getElementById('mktLikes');
+    var visitsIn = document.getElementById('mktVisits');
+    var saveBtn = document.getElementById('mktSave');
+    var status = document.getElementById('mktStatus');
+    var histBody = document.getElementById('mktHistBody');
+    if(!saveBtn) return;
 
-  saveBtn.addEventListener('click', function(){
-    status.textContent = '저장 중...';
-    var today = new Date().toISOString().slice(0,10);
-    fetch(SUPABASE_URL + '/rest/v1/marketing_stats', {
-      method: 'POST',
-      headers: headers({'Prefer':'return=minimal'}),
-      body: JSON.stringify({
-        week_label: today,
-        insta_posts: postsIn.value === '' ? null : Number(postsIn.value),
-        insta_likes: likesIn.value === '' ? null : Number(likesIn.value),
-        site_visits: visitsIn.value === '' ? null : Number(visitsIn.value)
-      })
-    }).then(function(r){
-      if(r.ok){
-        status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
-        postsIn.value = ''; likesIn.value = ''; visitsIn.value = '';
-        loadHistory();
-      } else {
-        r.text().then(function(t){ status.textContent = '저장 실패 (' + r.status + ')'; console.error(t); });
-      }
-    }).catch(function(){ status.textContent = '저장 실패 — 콘솔(F12) 확인'; });
-  });
-})();
-</script>
-<script>
-(function(){
-  var SUPABASE_URL = 'https://hweakxelagggawyuhpjl.supabase.co';
-  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3ZWFreGVsYWdnZ2F3eXVocGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMDUwNjYsImV4cCI6MjEwMzc4MTA2Nn0.pniv8uWhvE2J6ZJsWmLDypjBlIvwVyNtFpe_REXAR9o';
-  var titleIn = document.getElementById('wkTitle');
-  var linkIn = document.getElementById('wkLink');
-  var processIn = document.getElementById('wkProcess');
-  var learnedIn = document.getElementById('wkLearned');
-  var improveIn = document.getElementById('wkImprove');
-  var hoursIn = document.getElementById('wkHours');
-  var saveBtn = document.getElementById('wkSave');
-  var status = document.getElementById('wkStatus');
-  var list = document.getElementById('wkList');
-  if(!saveBtn) return;
+    function render(rows){
+      if(!rows.length){ histBody.innerHTML = '<tr><td colspan="4" style="color:#9ca3af">아직 기록이 없습니다</td></tr>'; return; }
+      histBody.innerHTML = rows.map(function(row){
+        return '<tr><td>'+esc(row.week_label||'')+'</td><td class="c">'+(row.insta_posts==null?'-':row.insta_posts)+'</td><td class="c">'+(row.insta_likes==null?'-':row.insta_likes)+'</td><td class="c">'+(row.site_visits==null?'-':row.site_visits)+'</td></tr>';
+      }).join('');
+    }
 
-  function esc(s){
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+    dbPromise.then(function(db){
+      if(!db){ histBody.innerHTML = '<tr><td colspan="4" style="color:#9ca3af">저장 기능을 지금은 쓸 수 없습니다</td></tr>'; return; }
+      var col = db.collection('marketing_stats');
+      col.orderBy('created_at','desc').limit(20).onSnapshot(function(snap){
+        render(snap.docs.map(function(d){ return d.data(); }));
+      }, function(){ histBody.innerHTML = '<tr><td colspan="4" style="color:var(--red)">불러오기 실패</td></tr>'; });
 
-  function headers(extra){
-    var h = {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-      'Content-Type': 'application/json'
-    };
-    for(var k in (extra||{})) h[k]=extra[k];
-    return h;
-  }
+      saveBtn.addEventListener('click', function(){
+        status.textContent = '저장 중...';
+        var today = new Date().toISOString().slice(0,10);
+        col.add({
+          week_label: today,
+          insta_posts: postsIn.value === '' ? null : Number(postsIn.value),
+          insta_likes: likesIn.value === '' ? null : Number(likesIn.value),
+          site_visits: visitsIn.value === '' ? null : Number(visitsIn.value),
+          created_at: Date.now()
+        }).then(function(){
+          status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
+          postsIn.value = ''; likesIn.value = ''; visitsIn.value = '';
+        }).catch(function(e){ status.textContent = '저장 실패'; console.error(e); });
+      });
+    });
+  })();
 
-  var editingId = null;
-  var rowsById = {};
+  // ---- 작품 포트폴리오 (portfolio projects) ----
+  (function(){
+    var titleIn = document.getElementById('wkTitle');
+    var linkIn = document.getElementById('wkLink');
+    var processIn = document.getElementById('wkProcess');
+    var learnedIn = document.getElementById('wkLearned');
+    var improveIn = document.getElementById('wkImprove');
+    var hoursIn = document.getElementById('wkHours');
+    var saveBtn = document.getElementById('wkSave');
+    var status = document.getElementById('wkStatus');
+    var list = document.getElementById('wkList');
+    if(!saveBtn) return;
 
-  function setFormMode(editing){
-    saveBtn.textContent = editing ? '수정 저장' : '작품 저장';
-    var cancelBtn = document.getElementById('wkCancel');
-    if(cancelBtn) cancelBtn.style.display = editing ? '' : 'none';
-  }
+    var editingId = null;
+    var rowsById = {};
 
-  function loadList(){
-    fetch(SUPABASE_URL + '/rest/v1/portfolio_projects?select=*&order=created_at.desc', {headers: headers()})
-      .then(function(r){ return r.json(); })
-      .then(function(rows){
-        if(!rows || !rows.length){ list.innerHTML = '<p style="color:#9ca3af;font-size:9pt">아직 등록된 작품이 없습니다</p>'; return; }
+    function setFormMode(editing){
+      saveBtn.textContent = editing ? '수정 저장' : '작품 저장';
+      var cancelBtn = document.getElementById('wkCancel');
+      if(cancelBtn) cancelBtn.style.display = editing ? '' : 'none';
+    }
+
+    function clearForm(){
+      titleIn.value=''; linkIn.value=''; processIn.value=''; learnedIn.value=''; improveIn.value=''; hoursIn.value='';
+      editingId = null;
+      setFormMode(false);
+    }
+
+    var cancelBtn = document.createElement('span');
+    cancelBtn.id = 'wkCancel';
+    cancelBtn.textContent = '취소';
+    cancelBtn.style.cssText = 'display:none;font-size:8.5pt;color:#6b7280;cursor:pointer;text-decoration:underline';
+    cancelBtn.addEventListener('click', clearForm);
+    saveBtn.parentNode.appendChild(cancelBtn);
+
+    dbPromise.then(function(db){
+      if(!db){ list.innerHTML = '<p style="color:#9ca3af;font-size:9pt">저장 기능을 지금은 쓸 수 없습니다</p>'; return; }
+      var col = db.collection('portfolio_projects');
+
+      col.orderBy('created_at','desc').limit(50).onSnapshot(function(snap){
+        if(!snap.docs.length){ list.innerHTML = '<p style="color:#9ca3af;font-size:9pt">아직 등록된 작품이 없습니다</p>'; return; }
         rowsById = {};
-        list.innerHTML = rows.map(function(p){
-          rowsById[p.id] = p;
+        list.innerHTML = snap.docs.map(function(doc){
+          var p = doc.data();
+          rowsById[doc.id] = p;
           var linkHtml = p.insta_link ? '<a href="'+esc(p.insta_link)+'" target="_blank" rel="noopener" style="color:var(--teal)">'+esc(p.insta_link)+'</a>' : '<span style="color:#9ca3af">(링크 없음)</span>';
           return '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 14px">'
             + '<div style="display:flex;justify-content:space-between;align-items:start;gap:8px">'
             + '<div style="font-weight:bold;color:var(--navy);margin-bottom:4px">'+esc(p.title||'(제목 없음)')+'</div>'
-            + '<button data-edit-id="'+p.id+'" class="wk-edit-btn" style="flex-shrink:0;font-size:8pt;padding:3px 9px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink-soft);cursor:pointer">수정</button>'
+            + '<button data-edit-id="'+doc.id+'" class="wk-edit-btn" style="flex-shrink:0;font-size:8pt;padding:3px 9px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;color:#374151;cursor:pointer">수정</button>'
             + '</div>'
             + '<div style="font-size:8.5pt;margin-bottom:8px">'+linkHtml+'</div>'
             + (p.process ? '<div style="font-size:9.5pt;margin-bottom:4px"><b>과정</b> · '+esc(p.process)+'</div>' : '')
@@ -372,7 +340,7 @@ show((location.hash||'').replace(/^#\/?/,''));
           btn.addEventListener('click', function(){
             var p = rowsById[btn.dataset.editId];
             if(!p) return;
-            editingId = p.id;
+            editingId = btn.dataset.editId;
             titleIn.value = p.title || '';
             linkIn.value = p.insta_link || '';
             processIn.value = p.process || '';
@@ -383,59 +351,31 @@ show((location.hash||'').replace(/^#\/?/,''));
             titleIn.scrollIntoView({behavior:'smooth', block:'center'});
           });
         });
-      })
-      .catch(function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패 — 콘솔(F12) 확인</p>'; });
-  }
-  loadList();
+      }, function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패</p>'; });
 
-  function clearForm(){
-    titleIn.value=''; linkIn.value=''; processIn.value=''; learnedIn.value=''; improveIn.value=''; hoursIn.value='';
-    editingId = null;
-    setFormMode(false);
-  }
-
-  var cancelBtn = document.createElement('span');
-  cancelBtn.id = 'wkCancel';
-  cancelBtn.textContent = '취소';
-  cancelBtn.style.cssText = 'display:none;font-size:8.5pt;color:var(--ink-soft);cursor:pointer;text-decoration:underline';
-  cancelBtn.addEventListener('click', clearForm);
-  saveBtn.parentNode.appendChild(cancelBtn);
-
-  saveBtn.addEventListener('click', function(){
-    if(!improveIn.value.trim()){
-      alert('"다시 만든다면 고칠 점"은 비워둘 수 없습니다. 반성이 인스타와 다른 점입니다.');
-      improveIn.focus();
-      return;
-    }
-    status.textContent = '저장 중...';
-    var body = {
-      title: titleIn.value,
-      insta_link: linkIn.value,
-      process: processIn.value,
-      learned: learnedIn.value,
-      improve: improveIn.value,
-      hours: hoursIn.value
-    };
-    var url = SUPABASE_URL + '/rest/v1/portfolio_projects';
-    var method = 'POST';
-    if(editingId){
-      url += '?id=eq.' + editingId;
-      method = 'PATCH';
-    }
-    fetch(url, {
-      method: method,
-      headers: headers({'Prefer':'return=minimal'}),
-      body: JSON.stringify(body)
-    }).then(function(r){
-      if(r.ok){
-        status.textContent = (editingId ? '수정됨' : '저장됨') + ' · ' + new Date().toLocaleTimeString('ko-KR');
-        clearForm();
-        loadList();
-      } else {
-        r.text().then(function(t){ status.textContent = '저장 실패 (' + r.status + ')'; console.error(t); });
-      }
-    }).catch(function(){ status.textContent = '저장 실패 — 콘솔(F12) 확인'; });
-  });
+      saveBtn.addEventListener('click', function(){
+        if(!improveIn.value.trim()){
+          alert('"다시 만든다면 고칠 점"은 비워둘 수 없습니다. 반성이 인스타와 다른 점입니다.');
+          improveIn.focus();
+          return;
+        }
+        status.textContent = '저장 중...';
+        var body = {
+          title: titleIn.value,
+          insta_link: linkIn.value,
+          process: processIn.value,
+          learned: learnedIn.value,
+          improve: improveIn.value,
+          hours: hoursIn.value
+        };
+        var p = editingId ? col.doc(editingId).update(body) : col.add(Object.assign({created_at: Date.now()}, body));
+        p.then(function(){
+          status.textContent = (editingId ? '수정됨' : '저장됨') + ' · ' + new Date().toLocaleTimeString('ko-KR');
+          clearForm();
+        }).catch(function(e){ status.textContent = '저장 실패'; console.error(e); });
+      });
+    });
+  })();
 })();
 </script>
 
