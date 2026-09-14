@@ -1446,6 +1446,14 @@ show((location.hash||'').replace(/^#\/?/,''));
     renderTable();
     renderMonthly();
   }
+  (function initCollapsedYears(){
+    var curYear = String(new Date().getFullYear());
+    var years = {};
+    state.rows.forEach(function(r){ years[(r.date || '').slice(0, 4)] = true; });
+    Object.keys(years).forEach(function(y){
+      if(y && y !== curYear) collapsedYears[y] = true;
+    });
+  })();
   renderAll();
 })();
 </script>
