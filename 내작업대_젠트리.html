@@ -1244,6 +1244,19 @@ show((location.hash||'').replace(/^#\/?/,''));
     renderMonthly();
   });
 
+  var CATEGORY_ALIAS_MAP = {
+    'Gukmin(80)': '국민(80)', '국민': '국민(80)',
+    'Hyundai(50)': '현대(50)',
+    'Samsung(40)': '삼성(80)', '삼성(40)': '삼성(80)',
+    'Insurance+Pension': '보험+연금',
+    'Communication': '통신비', '통신비(인터넷)': '통신비', '통신비(핸드폰+인터넷)': '통신비', '통신비(핸드폰+인터넷통합)': '통신비',
+    'Utility bill': '공과금',
+    'Withdrawal': '출금', '현금출금': '출금'
+  };
+  function normalizeCategory(label){
+    return CATEGORY_ALIAS_MAP[label] || label;
+  }
+
   function parseLedgerWorkbook(wb){
     var yearSheetRe = /^(\d{2})년/;
     var allCategories = [];
@@ -1252,19 +1265,23 @@ show((location.hash||'').replace(/^#\/?/,''));
     wb.SheetNames.forEach(function(name){
       var m = name.match(yearSheetRe);
       if(!m) return;
-      var year = 2000 + parseInt(m[1], 10);
+      var yy = parseInt(m[1], 10);
+      if(yy < 25 || yy > 33) return;
+      var year = 2000 + yy;
       var rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: null });
+      var DATE_LABELS = ['Date', '날짜'], INCOME_LABELS = ['Income', '수입'], REMAINDER_LABELS = ['Remainder', '잔액'];
       var headerIdx = -1;
       for(var i = 0; i < Math.min(rows.length, 10); i++){
-        if(rows[i] && String(rows[i][0] || '').trim() === 'Date' && String(rows[i][1] || '').trim() === 'Income'){ headerIdx = i; break; }
+        var hr = rows[i];
+        if(hr && DATE_LABELS.indexOf(String(hr[0] || '').trim()) !== -1 && INCOME_LABELS.indexOf(String(hr[1] || '').trim()) !== -1){ headerIdx = i; break; }
       }
       if(headerIdx === -1) return;
       var header = rows[headerIdx];
-      var remainderIdx = header.findIndex(function(h){ return String(h || '').trim() === 'Remainder'; });
+      var remainderIdx = header.findIndex(function(h){ return REMAINDER_LABELS.indexOf(String(h || '').trim()) !== -1; });
       if(remainderIdx === -1) remainderIdx = header.length;
       var catCols = [];
       for(var c = 2; c < remainderIdx; c++){
-        var label = String(header[c] || '').replace(/[\r\n]+/g, '').trim();
+        var label = normalizeCategory(String(header[c] || '').replace(/[\r\n]+/g, '').trim());
         if(label){
           catCols.push({ idx: c, name: label });
           if(allCategories.indexOf(label) === -1) allCategories.push(label);
@@ -1298,10 +1315,10 @@ show((location.hash||'').replace(/^#\/?/,''));
   }
 
   var PAYMENT_METHOD_MAP = {
-    'Kia Members 신용카드 Edition2': '현대카드',
-    'Kia Members 신용카드 Edition2 하이패스': '현대카드',
-    'T-Premium KB국민카드': '국민카드',
-    '트레이더스신세계 삼성카드': '삼성카드',
+    'Kia Members 신용카드 Edition2': '현대(50)',
+    'Kia Members 신용카드 Edition2 하이패스': '현대(50)',
+    'T-Premium KB국민카드': '국민(80)',
+    '트레이더스신세계 삼성카드': '삼성(80)',
     '직장인우대통장-보통예금': '출금'
   };
 
