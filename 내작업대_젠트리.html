@@ -437,8 +437,8 @@ show((location.hash||'').replace(/^#\/?/,''));
   function computeTotals(){
     var assetSum = 0, debtSum = 0;
     state.accounts.forEach(function(a){
+      if(a.excluded) return; // 이건 남의 돈 → 가진 것/빚 어느 쪽에도 넣지 않음
       if(a.type === 'debt') debtSum += a.amount; else assetSum += a.amount;
-      if(a.excluded) debtSum += a.amount; // 이건 남의 돈 → 갖고는 있지만 갚아야 할 빚으로도 잡아서 순자산에서 상쇄
     });
     sumAssetEl.textContent = fmt(assetSum);
     sumDebtEl.textContent = fmt(debtSum);
