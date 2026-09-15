@@ -69,6 +69,8 @@ tr:last-child td{border-bottom:0}
 body.hide-money .money-sensitive,body.hide-money .moneytable{filter:blur(7px);pointer-events:none;user-select:none;transition:filter .15s}
 .moneytable th,.moneytable td{white-space:nowrap}
 .moneytable{width:auto;min-width:100%}
+.moneytable th:first-child,.moneytable td:first-child{position:sticky;left:0;z-index:2;background:#fff}
+.moneytable th:first-child{background:var(--navy);z-index:3}
 #moneyBlurBtn{position:fixed;right:18px;bottom:18px;z-index:60;padding:9px 16px;border:0;border-radius:20px;
   background:var(--navy);color:#fff;font:inherit;font-size:9.5pt;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 #moneyBlurBtn:hover{background:var(--copper)}
