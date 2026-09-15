@@ -1004,8 +1004,9 @@ show((location.hash||'').replace(/^#\/?/,''));
         currentYear = year;
         var yearCount = reversed.filter(function(x){ return x.row.date.slice(0, 4) === year; }).length;
         var collapsed = !!collapsedYears[year];
-        htmlParts.push('<tr class="ld-year-header" style="background:#eef2f6"><td colspan="' + colCount + '"><button class="ld-year-toggle" data-year="' + year + '" style="border:0;background:none;cursor:pointer;font:inherit;font-weight:bold;color:var(--navy);padding:4px 0;width:100%;text-align:left">'
-          + (collapsed ? '▶' : '▼') + ' ' + year + '년 (' + yearCount + '건)</button></td></tr>');
+        htmlParts.push('<tr class="ld-year-header" style="background:#eef2f6"><td colspan="' + colCount + '" style="display:flex;align-items:center;gap:10px"><button class="ld-year-toggle" data-year="' + year + '" style="border:0;background:none;cursor:pointer;font:inherit;font-weight:bold;color:var(--navy);padding:4px 0;flex:1;text-align:left">'
+          + (collapsed ? '▶' : '▼') + ' ' + year + '년 (' + yearCount + '건)</button>'
+          + '<button class="ld-year-del" data-year="' + year + '" style="border:0;background:none;color:var(--red);cursor:pointer;font:inherit;font-size:8pt;flex-shrink:0">이 연도 전체 삭제</button></td></tr>');
       }
       if(collapsedYears[year]) return;
       var trStyle = row.estimated ? ' style="background:#fffaf3"' : '';
@@ -1026,6 +1027,17 @@ show((location.hash||'').replace(/^#\/?/,''));
         var year = btn.dataset.year;
         collapsedYears[year] = !collapsedYears[year];
         renderTable();
+      });
+    });
+    tbody.querySelectorAll('.ld-year-del').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var year = btn.dataset.year;
+        var count = state.rows.filter(function(r){ return (r.date || '').slice(0, 4) === year; }).length;
+        if(!confirm(year + '년 기록 ' + count + '건을 모두 삭제할까요? 되돌릴 수 없습니다.\n\n삭제 후 "시작 잔액"을 다음 연도 첫 날 기준으로 다시 맞춰주세요.')) return;
+        state.rows = state.rows.filter(function(r){ return (r.date || '').slice(0, 4) !== year; });
+        save();
+        renderTable();
+        renderMonthly();
       });
     });
     tbody.querySelectorAll('.ld-row-edit').forEach(function(btn){
@@ -1254,7 +1266,9 @@ show((location.hash||'').replace(/^#\/?/,''));
         if(!row) continue;
         var dcell = row[0];
         var dstr = null;
-        if(typeof dcell === 'number'){
+        if(dcell instanceof Date && !isNaN(dcell.getTime())){
+          dstr = (dcell.getMonth() + 1) + '.' + dcell.getDate();
+        } else if(typeof dcell === 'number'){
           var month = Math.floor(dcell);
           var day = Math.round((dcell - month) * 100);
           if(month >= 1 && month <= 12 && day >= 1 && day <= 31) dstr = month + '.' + day;
@@ -1358,18 +1372,25 @@ show((location.hash||'').replace(/^#\/?/,''));
           } else {
             parsed.categories.forEach(function(c){ if(state.categories.indexOf(c) === -1) state.categories.push(c); });
           }
-          var existing = {};
-          state.rows.forEach(function(r){ existing[r.date] = true; });
-          var added = 0, skipped = 0;
+          var byDate = {};
+          state.rows.forEach(function(r){ byDate[r.date] = r; });
+          var added = 0, updated = 0;
           parsed.rows.forEach(function(row){
-            if(existing[row.date]){ skipped++; return; }
-            row.id = Date.now() + '_' + Math.random().toString(36).slice(2) + '_' + row.date;
-            state.rows.push(row);
-            existing[row.date] = true;
-            added++;
+            var existingRow = byDate[row.date];
+            if(existingRow){
+              existingRow.income = row.income;
+              existingRow.values = row.values;
+              existingRow.estimated = row.estimated;
+              updated++;
+            } else {
+              row.id = Date.now() + '_' + Math.random().toString(36).slice(2) + '_' + row.date;
+              state.rows.push(row);
+              byDate[row.date] = row;
+              added++;
+            }
           });
           save();
-          fileStatus.textContent = added + '개 기록을 가져왔습니다 (겹치는 날짜 ' + skipped + '개는 건너뜀) · ' + new Date().toLocaleTimeString('ko-KR');
+          fileStatus.textContent = added + '개 새로 추가, ' + updated + '개 갱신(겹치는 날짜는 새 값으로 덮어씀) · ' + new Date().toLocaleTimeString('ko-KR');
           renderAll();
         }catch(err){
           console.error(err);
