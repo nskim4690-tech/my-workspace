@@ -435,11 +435,12 @@ show((location.hash||'').replace(/^#\/?/,''));
   }
 
   function computeTotals(){
-    var assetSum = 0, debtSum = 0;
+    var assetSum = 0, debtSum = 0, excludedSum = 0;
     state.accounts.forEach(function(a){
-      if(a.excluded) return; // 이건 남의 돈 → 가진 것/빚 어느 쪽에도 넣지 않음
+      if(a.excluded){ excludedSum += a.amount; return; } // 남의 돈은 가진 것에서 빼고, 빚 쪽에 합산
       if(a.type === 'debt') debtSum += a.amount; else assetSum += a.amount;
     });
+    debtSum += excludedSum;
     sumAssetEl.textContent = fmt(assetSum);
     sumDebtEl.textContent = fmt(debtSum);
     sumNetEl.textContent = fmt(assetSum - debtSum);
