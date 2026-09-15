@@ -732,12 +732,12 @@ show((location.hash||'').replace(/^#\/?/,''));
     wrap.style.cssText = 'margin:10px 0;padding:10px;background:#fff;border:1px solid #e5e7eb;border-radius:7px;overflow-x:auto';
 
     var nameRow = document.createElement('div');
-    nameRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px';
+    nameRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap';
     var nameIn = document.createElement('input');
     nameIn.type = 'text';
     nameIn.placeholder = '종목명 (예: RISE 코리아밸류업위클리고정커버드콜)';
     nameIn.value = holding.name || '';
-    nameIn.style.cssText = 'flex:1;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit;font-weight:bold';
+    nameIn.style.cssText = 'flex:1;min-width:160px;max-width:420px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font:inherit;font-weight:bold';
     nameIn.addEventListener('input', function(){
       holding.name = nameIn.value;
       save();
@@ -784,7 +784,7 @@ show((location.hash||'').replace(/^#\/?/,''));
     table.className = 'moneytable';
     table.style.marginBottom = '6px';
     var thead = document.createElement('thead');
-    var headRow = '<tr><th style="white-space:nowrap">항목</th>' + MONTHS.map(function(m){ return '<th class="c">' + m + '</th>'; }).join('') + '</tr>';
+    var headRow = '<tr><th style="white-space:nowrap">항목</th>' + MONTHS.map(function(m){ return '<th class="c" style="padding:6px 4px;text-align:center">' + m + '</th>'; }).join('') + '</tr>';
     thead.innerHTML = headRow;
     table.appendChild(thead);
 
@@ -820,10 +820,11 @@ show((location.hash||'').replace(/^#\/?/,''));
       holding.months.forEach(function(m, mi){
         var td = document.createElement('td');
         td.className = 'c';
+        td.style.padding = '7px 3px';
         var input = document.createElement('input');
         input.type = 'number';
         input.value = m[rd.key] ? (rd.unit ? (m[rd.key] / rd.unit) : m[rd.key]) : '';
-        input.style.cssText = 'width:78px;padding:4px;border:1px solid #e5e7eb;border-radius:5px;font:inherit;text-align:right';
+        input.style.cssText = 'width:58px;padding:4px 3px;border:1px solid #e5e7eb;border-radius:5px;font:inherit;text-align:right;font-size:9pt';
         input.addEventListener('input', function(){
           var raw = Number(input.value) || 0;
           holding.months[mi][rd.key] = rd.unit ? Math.round(raw * rd.unit) : raw;
@@ -850,6 +851,8 @@ show((location.hash||'').replace(/^#\/?/,''));
       var rtd = document.createElement('td');
       rtd.className = 'c';
       rtd.style.fontSize = '9pt';
+      rtd.style.padding = '7px 3px';
+      rtd.style.textAlign = 'center';
       rateCells.push(rtd);
       rateRow.appendChild(rtd);
     });
