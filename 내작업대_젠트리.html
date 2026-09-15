@@ -39,7 +39,7 @@ aside{width:238px;flex:0 0 238px;background:#fff;border-right:1px solid #e5e7eb;
 .pill.wip{background:#fffbeb;color:#b45309;border-color:#fde68a}
 .pill.plan{background:rgba(198,123,60,.1);color:var(--copper);border-color:rgba(198,123,60,.3)}
 .cell.active .pill{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.3)}
-main{flex:1;min-width:0;padding:20px 26px 70px;max-width:960px}
+main{flex:1;min-width:0;padding:20px 26px 70px;max-width:1400px}
 .priv{background:var(--navy);color:#fff;border-radius:9px;padding:12px 16px;margin-bottom:16px;font-size:9.5pt}
 .priv b{color:#fff}
 .scr{display:none}
@@ -67,6 +67,8 @@ tr:last-child td{border-bottom:0}
       line-height:1.85}
 @media(max-width:820px){.app{flex-direction:column}aside{width:auto;flex:none;height:auto;position:static}}
 body.hide-money .money-sensitive,body.hide-money .moneytable{filter:blur(7px);pointer-events:none;user-select:none;transition:filter .15s}
+.moneytable th,.moneytable td{white-space:nowrap}
+.moneytable{width:auto;min-width:100%}
 #moneyBlurBtn{position:fixed;right:18px;bottom:18px;z-index:60;padding:9px 16px;border:0;border-radius:20px;
   background:var(--navy);color:#fff;font:inherit;font-size:9.5pt;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 #moneyBlurBtn:hover{background:var(--copper)}
@@ -929,6 +931,26 @@ show((location.hash||'').replace(/^#\/?/,''));
     }catch(e){}
     return { categories: DEFAULT_CATEGORIES.slice(), startBalance: 0, rows: [] };
   }
+
+  (function mergeAliasCategories(){
+    var pairs = [['Education', '교육비']];
+    var changed = false;
+    pairs.forEach(function(pair){
+      var oldName = pair[0], newName = pair[1];
+      var oldIdx = state.categories.indexOf(oldName);
+      if(oldIdx === -1) return;
+      state.rows.forEach(function(r){
+        if(r.values && r.values[oldName] != null){
+          r.values[newName] = (Number(r.values[newName]) || 0) + (Number(r.values[oldName]) || 0);
+          delete r.values[oldName];
+        }
+      });
+      state.categories.splice(oldIdx, 1);
+      if(state.categories.indexOf(newName) === -1) state.categories.push(newName);
+      changed = true;
+    });
+    if(changed) save();
+  })();
   function save(){
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
   }
