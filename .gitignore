@@ -7,8 +7,6 @@ studio-kns-wood/
 # 민감한 개인/가족 정보 - 절대 커밋하지 않음
 가족/
 
-# API 키 / 시크릿 / 토큰 - 절대 커밋하지 않음
-젠트리/월1000/kakao_credentials.json
 
 # 파이썬 캐시
 __pycache__/
