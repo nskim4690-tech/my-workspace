@@ -198,6 +198,25 @@ show((location.hash||'').replace(/^#\/?/,''));
 (function(){
   var dbPromise = (window.claude && window.claude.use) ? window.claude.use('db') : Promise.resolve(null);
 
+  // 아티팩트로 열었을 때는 위 db(내장 저장소)를 쓰고, 로컬 파일(file://)로 열었을 때는
+  // window.claude가 없어 db가 null이 되므로 예전처럼 Supabase를 직접 호출해 저장한다.
+  var SUPABASE_URL = 'https://hweakxelagggawyuhpjl.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3ZWFreGVsYWdnZ2F3eXVocGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMDUwNjYsImV4cCI6MjEwMzc4MTA2Nn0.pniv8uWhvE2J6ZJsWmLDypjBlIvwVyNtFpe_REXAR9o';
+  function sbHeaders(extra){
+    var h = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+    for(var k in (extra||{})) h[k]=extra[k];
+    return h;
+  }
+  function sbGet(table, query){
+    return fetch(SUPABASE_URL + '/rest/v1/' + table + '?' + query, {headers: sbHeaders()}).then(function(r){ return r.json(); });
+  }
+  function sbPost(table, body){
+    return fetch(SUPABASE_URL + '/rest/v1/' + table, {method:'POST', headers: sbHeaders({'Prefer':'return=minimal'}), body: JSON.stringify(body)});
+  }
+  function sbPatch(table, id, body){
+    return fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + id, {method:'PATCH', headers: sbHeaders({'Prefer':'return=minimal'}), body: JSON.stringify(body)});
+  }
+
   function esc(s){
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
@@ -222,21 +241,44 @@ show((location.hash||'').replace(/^#\/?/,''));
     }
 
     dbPromise.then(function(db){
-      if(!db){ list.innerHTML = '<p style="color:#9ca3af;font-size:9pt">저장 기능을 지금은 쓸 수 없습니다</p>'; return; }
-      var col = db.collection('study_notes');
-      col.orderBy('created_at','desc').limit(50).onSnapshot(function(snap){
-        render(snap.docs.map(function(d){ return d.data(); }));
-      }, function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패</p>'; });
+      if(db){
+        var col = db.collection('study_notes');
+        col.orderBy('created_at','desc').limit(50).onSnapshot(function(snap){
+          render(snap.docs.map(function(d){ return d.data(); }));
+        }, function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패</p>'; });
+
+        saveBtn.addEventListener('click', function(){
+          if(!dateIn.value){ alert('날짜를 선택해주세요.'); dateIn.focus(); return; }
+          status.textContent = '저장 중...';
+          col.add({ note_date: dateIn.value, content: contentIn.value, created_at: Date.now() })
+            .then(function(){
+              status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
+              contentIn.value = '';
+            })
+            .catch(function(e){ status.textContent = '저장 실패'; console.error(e); });
+        });
+        return;
+      }
+      // 로컬 파일(file://)로 열었을 때 — Supabase 직접 호출
+      function loadList(){
+        sbGet('study_notes', 'select=note_date,content&note_date=not.is.null&order=note_date.desc')
+          .then(function(rows){ render(rows||[]); })
+          .catch(function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패 — 콘솔(F12) 확인</p>'; });
+      }
+      loadList();
 
       saveBtn.addEventListener('click', function(){
         if(!dateIn.value){ alert('날짜를 선택해주세요.'); dateIn.focus(); return; }
         status.textContent = '저장 중...';
-        col.add({ note_date: dateIn.value, content: contentIn.value, created_at: Date.now() })
-          .then(function(){
+        sbPost('study_notes', { note_date: dateIn.value, content: contentIn.value }).then(function(r){
+          if(r.ok){
             status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
             contentIn.value = '';
-          })
-          .catch(function(e){ status.textContent = '저장 실패'; console.error(e); });
+            loadList();
+          } else {
+            r.text().then(function(t){ status.textContent = '저장 실패 (' + r.status + ')'; console.error(t); });
+          }
+        }).catch(function(){ status.textContent = '저장 실패 — 콘솔(F12) 확인'; });
       });
     });
   })();
@@ -259,25 +301,53 @@ show((location.hash||'').replace(/^#\/?/,''));
     }
 
     dbPromise.then(function(db){
-      if(!db){ histBody.innerHTML = '<tr><td colspan="4" style="color:#9ca3af">저장 기능을 지금은 쓸 수 없습니다</td></tr>'; return; }
-      var col = db.collection('marketing_stats');
-      col.orderBy('created_at','desc').limit(20).onSnapshot(function(snap){
-        render(snap.docs.map(function(d){ return d.data(); }));
-      }, function(){ histBody.innerHTML = '<tr><td colspan="4" style="color:var(--red)">불러오기 실패</td></tr>'; });
+      if(db){
+        var col = db.collection('marketing_stats');
+        col.orderBy('created_at','desc').limit(20).onSnapshot(function(snap){
+          render(snap.docs.map(function(d){ return d.data(); }));
+        }, function(){ histBody.innerHTML = '<tr><td colspan="4" style="color:var(--red)">불러오기 실패</td></tr>'; });
+
+        saveBtn.addEventListener('click', function(){
+          status.textContent = '저장 중...';
+          var today = new Date().toISOString().slice(0,10);
+          col.add({
+            week_label: today,
+            insta_posts: postsIn.value === '' ? null : Number(postsIn.value),
+            insta_likes: likesIn.value === '' ? null : Number(likesIn.value),
+            site_visits: visitsIn.value === '' ? null : Number(visitsIn.value),
+            created_at: Date.now()
+          }).then(function(){
+            status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
+            postsIn.value = ''; likesIn.value = ''; visitsIn.value = '';
+          }).catch(function(e){ status.textContent = '저장 실패'; console.error(e); });
+        });
+        return;
+      }
+      // 로컬 파일(file://)로 열었을 때 — Supabase 직접 호출
+      function loadHistory(){
+        sbGet('marketing_stats', 'select=week_label,insta_posts,insta_likes,site_visits&order=created_at.desc&limit=20')
+          .then(function(rows){ render(rows||[]); })
+          .catch(function(){ histBody.innerHTML = '<tr><td colspan="4" style="color:var(--red)">불러오기 실패 — 콘솔(F12) 확인</td></tr>'; });
+      }
+      loadHistory();
 
       saveBtn.addEventListener('click', function(){
         status.textContent = '저장 중...';
         var today = new Date().toISOString().slice(0,10);
-        col.add({
+        sbPost('marketing_stats', {
           week_label: today,
           insta_posts: postsIn.value === '' ? null : Number(postsIn.value),
           insta_likes: likesIn.value === '' ? null : Number(likesIn.value),
-          site_visits: visitsIn.value === '' ? null : Number(visitsIn.value),
-          created_at: Date.now()
-        }).then(function(){
-          status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
-          postsIn.value = ''; likesIn.value = ''; visitsIn.value = '';
-        }).catch(function(e){ status.textContent = '저장 실패'; console.error(e); });
+          site_visits: visitsIn.value === '' ? null : Number(visitsIn.value)
+        }).then(function(r){
+          if(r.ok){
+            status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
+            postsIn.value = ''; likesIn.value = ''; visitsIn.value = '';
+            loadHistory();
+          } else {
+            r.text().then(function(t){ status.textContent = '저장 실패 (' + r.status + ')'; console.error(t); });
+          }
+        }).catch(function(){ status.textContent = '저장 실패 — 콘솔(F12) 확인'; });
       });
     });
   })();
@@ -317,45 +387,80 @@ show((location.hash||'').replace(/^#\/?/,''));
     cancelBtn.addEventListener('click', clearForm);
     saveBtn.parentNode.appendChild(cancelBtn);
 
-    dbPromise.then(function(db){
-      if(!db){ list.innerHTML = '<p style="color:#9ca3af;font-size:9pt">저장 기능을 지금은 쓸 수 없습니다</p>'; return; }
-      var col = db.collection('portfolio_projects');
-
-      col.orderBy('created_at','desc').limit(50).onSnapshot(function(snap){
-        if(!snap.docs.length){ list.innerHTML = '<p style="color:#9ca3af;font-size:9pt">아직 등록된 작품이 없습니다</p>'; return; }
-        rowsById = {};
-        list.innerHTML = snap.docs.map(function(doc){
-          var p = doc.data();
-          rowsById[doc.id] = p;
-          var linkHtml = p.insta_link ? '<a href="'+esc(p.insta_link)+'" target="_blank" rel="noopener" style="color:var(--teal)">'+esc(p.insta_link)+'</a>' : '<span style="color:#9ca3af">(링크 없음)</span>';
-          return '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 14px">'
-            + '<div style="display:flex;justify-content:space-between;align-items:start;gap:8px">'
-            + '<div style="font-weight:bold;color:var(--navy);margin-bottom:4px">'+esc(p.title||'(제목 없음)')+'</div>'
-            + '<button data-edit-id="'+doc.id+'" class="wk-edit-btn" style="flex-shrink:0;font-size:8pt;padding:3px 9px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;color:#374151;cursor:pointer">수정</button>'
-            + '</div>'
-            + '<div style="font-size:8.5pt;margin-bottom:8px">'+linkHtml+'</div>'
-            + (p.process ? '<div style="font-size:9.5pt;margin-bottom:4px"><b>과정</b> · '+esc(p.process)+'</div>' : '')
-            + (p.learned ? '<div style="font-size:9.5pt;margin-bottom:4px"><b>배운 것</b> · '+esc(p.learned)+'</div>' : '')
-            + (p.improve ? '<div style="font-size:9.5pt;margin-bottom:4px;color:var(--copper)"><b>다시 만든다면</b> · '+esc(p.improve)+'</div>' : '')
-            + (p.hours ? '<div style="font-size:8.5pt;color:#6b7280">걸린 시간 · '+esc(p.hours)+'</div>' : '')
-            + '</div>';
-        }).join('');
-        list.querySelectorAll('.wk-edit-btn').forEach(function(btn){
-          btn.addEventListener('click', function(){
-            var p = rowsById[btn.dataset.editId];
-            if(!p) return;
-            editingId = btn.dataset.editId;
-            titleIn.value = p.title || '';
-            linkIn.value = p.insta_link || '';
-            processIn.value = p.process || '';
-            learnedIn.value = p.learned || '';
-            improveIn.value = p.improve || '';
-            hoursIn.value = p.hours || '';
-            setFormMode(true);
-            titleIn.scrollIntoView({behavior:'smooth', block:'center'});
-          });
+    function renderList(rows){
+      if(!rows.length){ list.innerHTML = '<p style="color:#9ca3af;font-size:9pt">아직 등록된 작품이 없습니다</p>'; return; }
+      rowsById = {};
+      list.innerHTML = rows.map(function(row){
+        var id = row.id, p = row.data;
+        rowsById[id] = p;
+        var linkHtml = p.insta_link ? '<a href="'+esc(p.insta_link)+'" target="_blank" rel="noopener" style="color:var(--teal)">'+esc(p.insta_link)+'</a>' : '<span style="color:#9ca3af">(링크 없음)</span>';
+        return '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 14px">'
+          + '<div style="display:flex;justify-content:space-between;align-items:start;gap:8px">'
+          + '<div style="font-weight:bold;color:var(--navy);margin-bottom:4px">'+esc(p.title||'(제목 없음)')+'</div>'
+          + '<button data-edit-id="'+id+'" class="wk-edit-btn" style="flex-shrink:0;font-size:8pt;padding:3px 9px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;color:#374151;cursor:pointer">수정</button>'
+          + '</div>'
+          + '<div style="font-size:8.5pt;margin-bottom:8px">'+linkHtml+'</div>'
+          + (p.process ? '<div style="font-size:9.5pt;margin-bottom:4px"><b>과정</b> · '+esc(p.process)+'</div>' : '')
+          + (p.learned ? '<div style="font-size:9.5pt;margin-bottom:4px"><b>배운 것</b> · '+esc(p.learned)+'</div>' : '')
+          + (p.improve ? '<div style="font-size:9.5pt;margin-bottom:4px;color:var(--copper)"><b>다시 만든다면</b> · '+esc(p.improve)+'</div>' : '')
+          + (p.hours ? '<div style="font-size:8.5pt;color:#6b7280">걸린 시간 · '+esc(p.hours)+'</div>' : '')
+          + '</div>';
+      }).join('');
+      list.querySelectorAll('.wk-edit-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var p = rowsById[btn.dataset.editId];
+          if(!p) return;
+          editingId = btn.dataset.editId;
+          titleIn.value = p.title || '';
+          linkIn.value = p.insta_link || '';
+          processIn.value = p.process || '';
+          learnedIn.value = p.learned || '';
+          improveIn.value = p.improve || '';
+          hoursIn.value = p.hours || '';
+          setFormMode(true);
+          titleIn.scrollIntoView({behavior:'smooth', block:'center'});
         });
-      }, function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패</p>'; });
+      });
+    }
+
+    dbPromise.then(function(db){
+      if(db){
+        var col = db.collection('portfolio_projects');
+
+        col.orderBy('created_at','desc').limit(50).onSnapshot(function(snap){
+          renderList(snap.docs.map(function(doc){ return { id: doc.id, data: doc.data() }; }));
+        }, function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패</p>'; });
+
+        saveBtn.addEventListener('click', function(){
+          if(!improveIn.value.trim()){
+            alert('"다시 만든다면 고칠 점"은 비워둘 수 없습니다. 반성이 인스타와 다른 점입니다.');
+            improveIn.focus();
+            return;
+          }
+          status.textContent = '저장 중...';
+          var body = {
+            title: titleIn.value,
+            insta_link: linkIn.value,
+            process: processIn.value,
+            learned: learnedIn.value,
+            improve: improveIn.value,
+            hours: hoursIn.value
+          };
+          var p = editingId ? col.doc(editingId).update(body) : col.add(Object.assign({created_at: Date.now()}, body));
+          p.then(function(){
+            status.textContent = (editingId ? '수정됨' : '저장됨') + ' · ' + new Date().toLocaleTimeString('ko-KR');
+            clearForm();
+          }).catch(function(e){ status.textContent = '저장 실패'; console.error(e); });
+        });
+        return;
+      }
+      // 로컬 파일(file://)로 열었을 때 — Supabase 직접 호출
+      function loadList(){
+        sbGet('portfolio_projects', 'select=*&order=created_at.desc')
+          .then(function(rows){ renderList((rows||[]).map(function(p){ return { id: p.id, data: p }; })); })
+          .catch(function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패 — 콘솔(F12) 확인</p>'; });
+      }
+      loadList();
 
       saveBtn.addEventListener('click', function(){
         if(!improveIn.value.trim()){
@@ -372,11 +477,16 @@ show((location.hash||'').replace(/^#\/?/,''));
           improve: improveIn.value,
           hours: hoursIn.value
         };
-        var p = editingId ? col.doc(editingId).update(body) : col.add(Object.assign({created_at: Date.now()}, body));
-        p.then(function(){
-          status.textContent = (editingId ? '수정됨' : '저장됨') + ' · ' + new Date().toLocaleTimeString('ko-KR');
-          clearForm();
-        }).catch(function(e){ status.textContent = '저장 실패'; console.error(e); });
+        var req = editingId ? sbPatch('portfolio_projects', editingId, body) : sbPost('portfolio_projects', body);
+        req.then(function(r){
+          if(r.ok){
+            status.textContent = (editingId ? '수정됨' : '저장됨') + ' · ' + new Date().toLocaleTimeString('ko-KR');
+            clearForm();
+            loadList();
+          } else {
+            r.text().then(function(t){ status.textContent = '저장 실패 (' + r.status + ')'; console.error(t); });
+          }
+        }).catch(function(){ status.textContent = '저장 실패 — 콘솔(F12) 확인'; });
       });
     });
   })();
