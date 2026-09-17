@@ -507,6 +507,18 @@ show((location.hash||'').replace(/^#\/?/,''));
         if(!rows.length && SEED_PORTFOLIO_PROJECTS.length){
           rows = SEED_PORTFOLIO_PROJECTS.slice();
           lsSave(LS_KEY, rows);
+        } else {
+          // 이전에 이미지·배운 것·고칠 점이 비어 있던 옛 시드로 저장된 기기 —
+          // 아직 직접 수정 안 한(세 칸이 그대로 비어 있는) 항목만 최신 시드로 갱신한다.
+          var seedById = {};
+          SEED_PORTFOLIO_PROJECTS.forEach(function(s){ seedById[s.id] = s; });
+          var changed = false;
+          rows = rows.map(function(p){
+            var seed = seedById[p.id];
+            if(seed && !p.image && !p.learned && !p.improve){ changed = true; return seed; }
+            return p;
+          });
+          if(changed) lsSave(LS_KEY, rows);
         }
         rows = rows.slice().sort(function(a,b){ return (b.created_at||0)-(a.created_at||0); });
         renderList(rows.map(function(p){ return { id: p.id, data: p }; }));
