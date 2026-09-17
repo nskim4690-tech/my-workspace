@@ -252,6 +252,17 @@ show((location.hash||'').replace(/^#\/?/,''));
     { note_date: "2026-09-16", content: "1. 스툴 디자인\n2. 스툴 상판 집성\n3. 창호용 부재 마름질", created_at: 1789560000000 },
   ];
 
+  // 내 홈페이지(studio-kns-wood/works.html)에 이미 올려둔 작품을 옮겨온 시드 데이터.
+  // "배운 것"·"고칠 점"·"걸린 시간"은 본인만 쓸 수 있는 반성이라 비워뒀다 — 직접 채워야 한다.
+  var SEED_PORTFOLIO_PROJECTS = [
+    { id: "hexagon-post", title: "육각기둥", insta_link: "", process: "여섯 면의 각을 하나하나 맞춰 세웠습니다.", learned: "", improve: "", hours: "", created_at: 1785412800000 },
+    { id: "hinge-box", title: "경첩상자", insta_link: "", process: "경첩과 걸쇠까지 직접 달아 여닫이로 완성한 상자입니다.", learned: "", improve: "", hours: "", created_at: 1785758400000 },
+    { id: "wood-bench", title: "원목 벤치", insta_link: "", process: "좌판과 다리를 짜 맞춘 벤치입니다.", learned: "", improve: "", hours: "", created_at: 1785931200000 },
+    { id: "toolbox", title: "공구함", insta_link: "", process: "스케치업으로 직접 설계한 도면 그대로 짠 박공 지붕 공구함입니다.", learned: "", improve: "", hours: "", created_at: 1786363200000 },
+    { id: "floor-structure", title: "바닥", insta_link: "", process: "멍에·장선을 짜고 트러스까지 올린 바닥 구조입니다.", learned: "", improve: "", hours: "", created_at: 1786708800000 },
+    { id: "wall-install", title: "벽 설치", insta_link: "", process: "틀을 세우고 아치형 출입구까지 낸 벽체 구조입니다.", learned: "", improve: "", hours: "", created_at: 1787832000000 }
+  ];
+
   function esc(s){
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
@@ -490,7 +501,12 @@ show((location.hash||'').replace(/^#\/?/,''));
       // 로컬 파일(file://)로 열었을 때 — localStorage에 저장
       var LS_KEY = 'gentree-portfolio-projects-v1';
       function loadList(){
-        var rows = lsLoad(LS_KEY).slice().sort(function(a,b){ return (b.created_at||0)-(a.created_at||0); });
+        var rows = lsLoad(LS_KEY);
+        if(!rows.length && SEED_PORTFOLIO_PROJECTS.length){
+          rows = SEED_PORTFOLIO_PROJECTS.slice();
+          lsSave(LS_KEY, rows);
+        }
+        rows = rows.slice().sort(function(a,b){ return (b.created_at||0)-(a.created_at||0); });
         renderList(rows.map(function(p){ return { id: p.id, data: p }; }));
       }
       loadList();
