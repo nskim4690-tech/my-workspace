@@ -198,23 +198,16 @@ show((location.hash||'').replace(/^#\/?/,''));
 (function(){
   var dbPromise = (window.claude && window.claude.use) ? window.claude.use('db') : Promise.resolve(null);
 
-  // 아티팩트로 열었을 때는 위 db(내장 저장소)를 쓰고, 로컬 파일(file://)로 열었을 때는
-  // window.claude가 없어 db가 null이 되므로 예전처럼 Supabase를 직접 호출해 저장한다.
-  var SUPABASE_URL = 'https://hweakxelagggawyuhpjl.supabase.co';
-  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3ZWFreGVsYWdnZ2F3eXVocGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMDUwNjYsImV4cCI6MjEwMzc4MTA2Nn0.pniv8uWhvE2J6ZJsWmLDypjBlIvwVyNtFpe_REXAR9o';
-  function sbHeaders(extra){
-    var h = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
-    for(var k in (extra||{})) h[k]=extra[k];
-    return h;
+  // 아티팩트로 열었을 때는 위 db(내장 저장소)를 쓴다. 로컬 파일(file://)로 열었을 때는
+  // window.claude가 없어 db가 null이 되는데, 예전에 쓰던 Supabase 프로젝트(hweakxelagggawyuhpjl)는
+  // 도메인 자체가 더 이상 조회되지 않아(ERR_NAME_NOT_RESOLVED) 삭제/만료된 것으로 보인다.
+  // 그래서 로컬 파일에서는 가계부·내 자산과 같은 방식으로 이 브라우저의 localStorage에 저장한다
+  // (기기 간 동기화는 안 되지만, 최소한 이 컴퓨터에서는 새로고침해도 사라지지 않는다).
+  function lsLoad(key){
+    try{ return JSON.parse(localStorage.getItem(key) || '[]'); }catch(e){ return []; }
   }
-  function sbGet(table, query){
-    return fetch(SUPABASE_URL + '/rest/v1/' + table + '?' + query, {headers: sbHeaders()}).then(function(r){ return r.json(); });
-  }
-  function sbPost(table, body){
-    return fetch(SUPABASE_URL + '/rest/v1/' + table, {method:'POST', headers: sbHeaders({'Prefer':'return=minimal'}), body: JSON.stringify(body)});
-  }
-  function sbPatch(table, id, body){
-    return fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + id, {method:'PATCH', headers: sbHeaders({'Prefer':'return=minimal'}), body: JSON.stringify(body)});
+  function lsSave(key, rows){
+    try{ localStorage.setItem(key, JSON.stringify(rows)); }catch(e){}
   }
 
   function esc(s){
@@ -259,26 +252,22 @@ show((location.hash||'').replace(/^#\/?/,''));
         });
         return;
       }
-      // 로컬 파일(file://)로 열었을 때 — Supabase 직접 호출
+      // 로컬 파일(file://)로 열었을 때 — localStorage에 저장
+      var LS_KEY = 'gentree-study-notes-v1';
       function loadList(){
-        sbGet('study_notes', 'select=note_date,content&note_date=not.is.null&order=note_date.desc')
-          .then(function(rows){ render(rows||[]); })
-          .catch(function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패 — 콘솔(F12) 확인</p>'; });
+        var rows = lsLoad(LS_KEY).slice().sort(function(a,b){ return (b.note_date||'').localeCompare(a.note_date||''); });
+        render(rows);
       }
       loadList();
 
       saveBtn.addEventListener('click', function(){
         if(!dateIn.value){ alert('날짜를 선택해주세요.'); dateIn.focus(); return; }
-        status.textContent = '저장 중...';
-        sbPost('study_notes', { note_date: dateIn.value, content: contentIn.value }).then(function(r){
-          if(r.ok){
-            status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
-            contentIn.value = '';
-            loadList();
-          } else {
-            r.text().then(function(t){ status.textContent = '저장 실패 (' + r.status + ')'; console.error(t); });
-          }
-        }).catch(function(){ status.textContent = '저장 실패 — 콘솔(F12) 확인'; });
+        var rows = lsLoad(LS_KEY);
+        rows.push({ note_date: dateIn.value, content: contentIn.value, created_at: Date.now() });
+        lsSave(LS_KEY, rows);
+        status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
+        contentIn.value = '';
+        loadList();
       });
     });
   })();
@@ -323,31 +312,28 @@ show((location.hash||'').replace(/^#\/?/,''));
         });
         return;
       }
-      // 로컬 파일(file://)로 열었을 때 — Supabase 직접 호출
+      // 로컬 파일(file://)로 열었을 때 — localStorage에 저장
+      var LS_KEY = 'gentree-marketing-stats-v1';
       function loadHistory(){
-        sbGet('marketing_stats', 'select=week_label,insta_posts,insta_likes,site_visits&order=created_at.desc&limit=20')
-          .then(function(rows){ render(rows||[]); })
-          .catch(function(){ histBody.innerHTML = '<tr><td colspan="4" style="color:var(--red)">불러오기 실패 — 콘솔(F12) 확인</td></tr>'; });
+        var rows = lsLoad(LS_KEY).slice().sort(function(a,b){ return (b.created_at||0)-(a.created_at||0); }).slice(0,20);
+        render(rows);
       }
       loadHistory();
 
       saveBtn.addEventListener('click', function(){
-        status.textContent = '저장 중...';
         var today = new Date().toISOString().slice(0,10);
-        sbPost('marketing_stats', {
+        var rows = lsLoad(LS_KEY);
+        rows.push({
           week_label: today,
           insta_posts: postsIn.value === '' ? null : Number(postsIn.value),
           insta_likes: likesIn.value === '' ? null : Number(likesIn.value),
-          site_visits: visitsIn.value === '' ? null : Number(visitsIn.value)
-        }).then(function(r){
-          if(r.ok){
-            status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
-            postsIn.value = ''; likesIn.value = ''; visitsIn.value = '';
-            loadHistory();
-          } else {
-            r.text().then(function(t){ status.textContent = '저장 실패 (' + r.status + ')'; console.error(t); });
-          }
-        }).catch(function(){ status.textContent = '저장 실패 — 콘솔(F12) 확인'; });
+          site_visits: visitsIn.value === '' ? null : Number(visitsIn.value),
+          created_at: Date.now()
+        });
+        lsSave(LS_KEY, rows);
+        status.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
+        postsIn.value = ''; likesIn.value = ''; visitsIn.value = '';
+        loadHistory();
       });
     });
   })();
@@ -454,11 +440,11 @@ show((location.hash||'').replace(/^#\/?/,''));
         });
         return;
       }
-      // 로컬 파일(file://)로 열었을 때 — Supabase 직접 호출
+      // 로컬 파일(file://)로 열었을 때 — localStorage에 저장
+      var LS_KEY = 'gentree-portfolio-projects-v1';
       function loadList(){
-        sbGet('portfolio_projects', 'select=*&order=created_at.desc')
-          .then(function(rows){ renderList((rows||[]).map(function(p){ return { id: p.id, data: p }; })); })
-          .catch(function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패 — 콘솔(F12) 확인</p>'; });
+        var rows = lsLoad(LS_KEY).slice().sort(function(a,b){ return (b.created_at||0)-(a.created_at||0); });
+        renderList(rows.map(function(p){ return { id: p.id, data: p }; }));
       }
       loadList();
 
@@ -468,7 +454,6 @@ show((location.hash||'').replace(/^#\/?/,''));
           improveIn.focus();
           return;
         }
-        status.textContent = '저장 중...';
         var body = {
           title: titleIn.value,
           insta_link: linkIn.value,
@@ -477,16 +462,16 @@ show((location.hash||'').replace(/^#\/?/,''));
           improve: improveIn.value,
           hours: hoursIn.value
         };
-        var req = editingId ? sbPatch('portfolio_projects', editingId, body) : sbPost('portfolio_projects', body);
-        req.then(function(r){
-          if(r.ok){
-            status.textContent = (editingId ? '수정됨' : '저장됨') + ' · ' + new Date().toLocaleTimeString('ko-KR');
-            clearForm();
-            loadList();
-          } else {
-            r.text().then(function(t){ status.textContent = '저장 실패 (' + r.status + ')'; console.error(t); });
-          }
-        }).catch(function(){ status.textContent = '저장 실패 — 콘솔(F12) 확인'; });
+        var rows = lsLoad(LS_KEY);
+        if(editingId){
+          rows = rows.map(function(p){ return p.id === editingId ? Object.assign({}, p, body) : p; });
+        } else {
+          rows.push(Object.assign({ id: String(Date.now()), created_at: Date.now() }, body));
+        }
+        lsSave(LS_KEY, rows);
+        status.textContent = (editingId ? '수정됨' : '저장됨') + ' · ' + new Date().toLocaleTimeString('ko-KR');
+        clearForm();
+        loadList();
       });
     });
   })();
