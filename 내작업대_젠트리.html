@@ -255,12 +255,12 @@ show((location.hash||'').replace(/^#\/?/,''));
   // 내 홈페이지(studio-kns-wood/works.html)에 이미 올려둔 작품을 옮겨온 시드 데이터.
   // "배운 것"·"고칠 점"·"걸린 시간"은 본인만 쓸 수 있는 반성이라 비워뒀다 — 직접 채워야 한다.
   var SEED_PORTFOLIO_PROJECTS = [
-    { id: "hexagon-post", title: "육각기둥", insta_link: "", process: "여섯 면의 각을 하나하나 맞춰 세웠습니다.", learned: "", improve: "", hours: "", created_at: 1785412800000 },
-    { id: "hinge-box", title: "경첩상자", insta_link: "", process: "경첩과 걸쇠까지 직접 달아 여닫이로 완성한 상자입니다.", learned: "", improve: "", hours: "", created_at: 1785758400000 },
-    { id: "wood-bench", title: "원목 벤치", insta_link: "", process: "좌판과 다리를 짜 맞춘 벤치입니다.", learned: "", improve: "", hours: "", created_at: 1785931200000 },
-    { id: "toolbox", title: "공구함", insta_link: "", process: "스케치업으로 직접 설계한 도면 그대로 짠 박공 지붕 공구함입니다.", learned: "", improve: "", hours: "", created_at: 1786363200000 },
-    { id: "floor-structure", title: "바닥", insta_link: "", process: "멍에·장선을 짜고 트러스까지 올린 바닥 구조입니다.", learned: "", improve: "", hours: "", created_at: 1786708800000 },
-    { id: "wall-install", title: "벽 설치", insta_link: "", process: "틀을 세우고 아치형 출입구까지 낸 벽체 구조입니다.", learned: "", improve: "", hours: "", created_at: 1787832000000 }
+    { id: "hexagon-post", title: "육각기둥", insta_link: "", process: "여섯 면의 각을 하나하나 맞춰 세웠습니다.", image: "studio-kns-wood/images/hex.jpg", learned: "다각형 절단각 계산법(180°/N)을 이용해 육각형 각도를 구하고, 스케치업으로 미리 모델링한 뒤 실제 재단으로 옮기는 순서를 배웠습니다.", improve: "각도 계산은 맞았는데 실제 절단에서 톱날 두께만큼 오차가 누적돼 마지막 면이 살짝 안 맞았습니다. 다음엔 절단선에 톱날 두께를 미리 반영해야겠습니다.", hours: "", created_at: 1785412800000 },
+    { id: "hinge-box", title: "경첩상자", insta_link: "", process: "경첩과 걸쇠까지 직접 달아 여닫이로 완성한 상자입니다.", image: "studio-kns-wood/images/hinge-box.jpg", learned: "트리머 회전 방향과 홈 파는 방향의 관계(시계방향 회전 시 반시계방향으로 이동)를 익히고, 경첩과 걸쇠를 직접 달아 여닫이 구조를 완성했습니다.", improve: "경첩 위치를 먼저 표시하지 않고 감으로 달아서 문짝이 살짝 어긋났습니다. 다음엔 경첩 홈 위치를 먼저 먹줄로 표시하고 파야겠습니다.", hours: "", created_at: 1785758400000 },
+    { id: "wood-bench", title: "원목 벤치", insta_link: "", process: "좌판과 다리를 짜 맞춘 벤치입니다.", image: "studio-kns-wood/images/bench.jpg", learned: "연귀 절단(마이터 컷)으로 모서리를 맞추고 대패로 마감면을 다듬는 순서를 익혔습니다.", improve: "연귀 각도를 재단기 눈금만 믿고 잘랐더니 좌판과 다리 이음새에 살짝 틈이 생겼습니다. 다음엔 시험 절단을 먼저 해보고 각도를 확인한 뒤 본재를 잘라야겠습니다.", hours: "", created_at: 1785931200000 },
+    { id: "toolbox", title: "공구함", insta_link: "", process: "스케치업으로 직접 설계한 도면 그대로 짠 박공 지붕 공구함입니다.", image: "studio-kns-wood/images/toolbox-real.jpg", learned: "스케치업으로 먼저 도면(절단 380*200*140, 5mm 합판 절단 368*188 등)을 설계한 뒤, 트리머로 홈을 파고 그대로 시공하는 순서를 배웠습니다. 박공 지붕 형태를 짜 맞추는 법도 익혔습니다.", improve: "도면상 치수와 실제 합판 두께 차이를 계산에 안 넣어서 조립할 때 이음새가 뻑뻑했습니다. 다음엔 설계 단계에서 자재 실측 두께를 반영해야겠습니다.", hours: "", created_at: 1786363200000 },
+    { id: "floor-structure", title: "바닥", insta_link: "", process: "멍에·장선을 짜고 트러스까지 올린 바닥 구조입니다.", image: "studio-kns-wood/images/floor.jpg", learned: "멍에·장선을 짜는 방식(멍에장선방식)과 타카 박는 각도(30~45도)·깊이(20~30mm) 요령을 배우고, 트러스까지 올려 바닥 구조를 완성했습니다.", improve: "타카를 수직으로만 박아서 일부 이음새가 헐거웠습니다. 다음엔 수업에서 배운 대로 타카를 약간 비스듬히 박아 고정력을 높여야겠습니다.", hours: "", created_at: 1786708800000 },
+    { id: "wall-install", title: "벽 설치", insta_link: "", process: "틀을 세우고 아치형 출입구까지 낸 벽체 구조입니다.", image: "studio-kns-wood/images/wall.jpg", learned: "석고보드 절단 후 마감(바닥 5mm 띄우기, 본드 접합 각도)과 아치형 출입구를 만들 때 원형 망치로 보강하고 합판을 2단으로 덧대는 방법을 배웠습니다.", improve: "아치 부분 골조를 먼저 세우고 나서 치수를 재는 바람에, 마감재를 자를 때 한 번 더 재단해야 했습니다. 다음엔 골조 단계에서 마감재 두께까지 미리 계산해 치수를 잡아야겠습니다.", hours: "", created_at: 1787832000000 }
   ];
 
   function esc(s){
@@ -438,7 +438,9 @@ show((location.hash||'').replace(/^#\/?/,''));
         var id = row.id, p = row.data;
         rowsById[id] = p;
         var linkHtml = p.insta_link ? '<a href="'+esc(p.insta_link)+'" target="_blank" rel="noopener" style="color:var(--teal)">'+esc(p.insta_link)+'</a>' : '<span style="color:#9ca3af">(링크 없음)</span>';
+        var imgHtml = p.image ? '<img src="'+esc(p.image)+'" alt="'+esc(p.title||'')+'" style="width:100%;max-height:260px;object-fit:cover;border-radius:7px;margin-bottom:10px" onerror="this.style.display=\'none\'">' : '';
         return '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 14px">'
+          + imgHtml
           + '<div style="display:flex;justify-content:space-between;align-items:start;gap:8px">'
           + '<div style="font-weight:bold;color:var(--navy);margin-bottom:4px">'+esc(p.title||'(제목 없음)')+'</div>'
           + '<button data-edit-id="'+id+'" class="wk-edit-btn" style="flex-shrink:0;font-size:8pt;padding:3px 9px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;color:#374151;cursor:pointer">수정</button>'
