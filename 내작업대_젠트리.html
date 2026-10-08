@@ -1252,6 +1252,32 @@ show((location.hash||'').replace(/^#\/?/,''));
     });
   }
 
+  function todayLocal(){
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  // 지운 기록이 맨 앞(가장 오래된 쪽)이면 남은 기록의 잔액이 그대로 이어지도록 시작 잔액을 자동으로 맞춘다
+  function deleteRowsKeepBalance(shouldDelete){
+    var computed = computeRows();
+    var lastDel = -1, firstKeep = -1;
+    computed.forEach(function(c, i){
+      if(shouldDelete(c.row)) lastDel = i;
+      else if(firstKeep === -1) firstKeep = i;
+    });
+    var linked = null;
+    if(lastDel !== -1 && firstKeep !== -1 && lastDel < firstKeep){
+      linked = computed[lastDel].balance;
+      state.startBalance = linked;
+      startBalanceIn.value = linked || '';
+    }
+    state.rows = state.rows.filter(function(r){ return !shouldDelete(r); });
+    save();
+    renderTable();
+    renderMonthly();
+    addStatus.textContent = linked === null ? '' : '시작 잔액을 ' + fmt(linked) + '원으로 자동 연결했습니다 · ' + new Date().toLocaleTimeString('ko-KR');
+  }
+
   function renderTable(){
     renderThead();
     var computed = computeRows();
@@ -1299,11 +1325,8 @@ show((location.hash||'').replace(/^#\/?/,''));
       btn.addEventListener('click', function(){
         var year = btn.dataset.year;
         var count = state.rows.filter(function(r){ return (r.date || '').slice(0, 4) === year; }).length;
-        if(!confirm(year + '년 기록 ' + count + '건을 모두 삭제할까요? 되돌릴 수 없습니다.\n\n삭제 후 "시작 잔액"을 다음 연도 첫 날 기준으로 다시 맞춰주세요.')) return;
-        state.rows = state.rows.filter(function(r){ return (r.date || '').slice(0, 4) !== year; });
-        save();
-        renderTable();
-        renderMonthly();
+        if(!confirm(year + '년 기록 ' + count + '건을 모두 삭제할까요? 되돌릴 수 없습니다.\n\n가장 오래된 기록을 지우면, 남은 기록의 잔액이 그대로 이어지도록 "시작 잔액"이 자동으로 맞춰집니다.')) return;
+        deleteRowsKeepBalance(function(r){ return (r.date || '').slice(0, 4) === year; });
       });
     });
     tbody.querySelectorAll('.ld-row-edit').forEach(function(btn){
@@ -1314,7 +1337,7 @@ show((location.hash||'').replace(/^#\/?/,''));
         editingId = row.id;
         dateIn.value = row.date;
         incomeIn.value = row.income || '';
-        estimatedIn.checked = !!row.estimated;
+        estimatedIn.checked = !!row.estimated && row.date > todayLocal();  // 기간이 지난 예상은 수정 저장하면 확정으로 바뀐다
         catInputsBox.querySelectorAll('.ld-cat-input').forEach(function(inp){
           inp.value = (row.values && row.values[inp.dataset.cat]) || '';
         });
@@ -1358,11 +1381,8 @@ show((location.hash||'').replace(/^#\/?/,''));
       btn.addEventListener('click', function(){
         var month = btn.dataset.month;
         var count = state.rows.filter(function(r){ return (r.date || '').slice(0, 7) === month; }).length;
-        if(!confirm(month + ' 기록 ' + count + '건을 모두 삭제할까요? 되돌릴 수 없습니다.')) return;
-        state.rows = state.rows.filter(function(r){ return (r.date || '').slice(0, 7) !== month; });
-        save();
-        renderTable();
-        renderMonthly();
+        if(!confirm(month + ' 기록 ' + count + '건을 모두 삭제할까요? 되돌릴 수 없습니다.\n\n가장 오래된 기록을 지우면, 남은 기록의 잔액이 그대로 이어지도록 "시작 잔액"이 자동으로 맞춰집니다.')) return;
+        deleteRowsKeepBalance(function(r){ return (r.date || '').slice(0, 7) === month; });
       });
     });
   }
