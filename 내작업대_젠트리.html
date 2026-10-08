@@ -1159,6 +1159,7 @@ show((location.hash||'').replace(/^#\/?/,''));
   var collapsedYears = {};
 
   var DEFAULT_CATEGORIES = ['국민카드(80)', '현대카드(50)', '삼성카드(40)', '보험+연금', '통신비', '공과금', '출금'];
+  var HIDDEN_CATEGORIES = ['대출금', '교육비'];  // 입력 항목에서 뺀 항목 (지난 기록 숫자는 합계에 그대로 남음)
 
   var state = load();
 
@@ -1188,6 +1189,11 @@ show((location.hash||'').replace(/^#\/?/,''));
       changed = true;
     });
     if(changed) save();
+  })();
+  (function dropHiddenCategories(){
+    var before = state.categories.length;
+    state.categories = state.categories.filter(function(c){ return HIDDEN_CATEGORIES.indexOf(c) === -1; });
+    if(state.categories.length !== before){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
   })();
   function save(){
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
@@ -1372,7 +1378,7 @@ show((location.hash||'').replace(/^#\/?/,''));
   });
 
   cleanupCatBtn.addEventListener('click', function(){
-    if(!confirm('지금 있는 항목을 "개인지출내역" 기준(국민(80)/현대(50)/삼성(80)/보험+연금/통신비/교육비/공과금/대출금/출금)으로 정리할까요?\n\n같은 카드를 가리키는 다른 이름은 금액을 합쳐서 하나로 통일되고, 카드와 상관없는 예전 분류(식비/교통 등)는 삭제됩니다. 되돌릴 수 없습니다.')) return;
+    if(!confirm('지금 있는 항목을 "개인지출내역" 기준(국민(80)/현대(50)/삼성(80)/보험+연금/통신비/공과금/출금)으로 정리할까요?\n\n같은 카드를 가리키는 다른 이름은 금액을 합쳐서 하나로 통일되고, 카드와 상관없는 예전 분류(식비/교통 등)는 삭제됩니다. 되돌릴 수 없습니다.')) return;
     state.rows.forEach(function(row){
       var newValues = {};
       Object.keys(row.values || {}).forEach(function(k){
@@ -1497,7 +1503,7 @@ show((location.hash||'').replace(/^#\/?/,''));
     'Education': '교육비',
     'Withdrawal': '출금', '현금출금': '출금'
   };
-  var CANONICAL_CATEGORIES = ['국민(80)', '현대(50)', '삼성(80)', '보험+연금', '통신비', '교육비', '공과금', '대출금', '출금'];
+  var CANONICAL_CATEGORIES = ['국민(80)', '현대(50)', '삼성(80)', '보험+연금', '통신비', '공과금', '출금'];
   function normalizeCategory(label){
     return CATEGORY_ALIAS_MAP[label] || label;
   }
@@ -1639,9 +1645,9 @@ show((location.hash||'').replace(/^#\/?/,''));
           }
           var isUntouchedDefault = !state.rows.length && state.categories.length === DEFAULT_CATEGORIES.length && state.categories.every(function(c, i){ return c === DEFAULT_CATEGORIES[i]; });
           if(isUntouchedDefault){
-            state.categories = parsed.categories.slice();
+            state.categories = parsed.categories.filter(function(c){ return HIDDEN_CATEGORIES.indexOf(c) === -1; });
           } else {
-            parsed.categories.forEach(function(c){ if(state.categories.indexOf(c) === -1) state.categories.push(c); });
+            parsed.categories.forEach(function(c){ if(HIDDEN_CATEGORIES.indexOf(c) === -1 && state.categories.indexOf(c) === -1) state.categories.push(c); });
           }
           var byDate = {};
           state.rows.forEach(function(r){ byDate[r.date] = r; });
