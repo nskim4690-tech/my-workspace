@@ -333,9 +333,15 @@ show((location.hash||'').replace(/^#\/?/,''));
     dbPromise.then(function(db){
       if(db){
         var col = db.collection('study_notes');
-        col.orderBy('created_at','desc').limit(50).onSnapshot(function(snap){
-          render(snap.docs.map(function(d){ return d.data(); }));
-        }, function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패</p>'; });
+        col.orderBy('created_at','desc').limit(200).onSnapshot(function(snap){
+          var seedDates = {};
+          SEED_STUDY_NOTES.forEach(function(s){ seedDates[s.note_date] = true; });
+          var rows = snap.docs.map(function(d){ return d.data(); })
+            .filter(function(r){ return !seedDates[r.note_date]; })
+            .concat(SEED_STUDY_NOTES)
+            .sort(function(a,b){ return (b.note_date||'').localeCompare(a.note_date||''); });
+          render(rows);
+        }, function(){ render(SEED_STUDY_NOTES.slice().sort(function(a,b){ return (b.note_date||'').localeCompare(a.note_date||''); })); });
 
         saveBtn.addEventListener('click', function(){
           if(!dateIn.value){ alert('날짜를 선택해주세요.'); dateIn.focus(); return; }
@@ -520,9 +526,15 @@ show((location.hash||'').replace(/^#\/?/,''));
       if(db){
         var col = db.collection('portfolio_projects');
 
-        col.orderBy('created_at','desc').limit(50).onSnapshot(function(snap){
-          renderList(snap.docs.map(function(doc){ return { id: doc.id, data: doc.data() }; }));
-        }, function(){ list.innerHTML = '<p style="color:var(--red);font-size:9pt">불러오기 실패</p>'; });
+        function seedRows(){ return SEED_PORTFOLIO_PROJECTS.map(function(p){ return { id: p.id, data: p }; }); }
+        col.orderBy('created_at','desc').limit(100).onSnapshot(function(snap){
+          var byId = {};
+          seedRows().forEach(function(r){ byId[r.id] = r; });
+          snap.docs.forEach(function(doc){ byId[doc.id] = { id: doc.id, data: doc.data() }; });
+          var rows = Object.keys(byId).map(function(k){ return byId[k]; })
+            .sort(function(a,b){ return (b.data.created_at||0)-(a.data.created_at||0); });
+          renderList(rows);
+        }, function(){ renderList(seedRows()); });
 
         saveBtn.addEventListener('click', function(){
           if(!improveIn.value.trim()){
@@ -539,7 +551,9 @@ show((location.hash||'').replace(/^#\/?/,''));
             improve: improveIn.value,
             hours: hoursIn.value
           };
-          var p = editingId ? col.doc(editingId).update(body) : col.add(Object.assign({created_at: Date.now()}, body));
+          var p = editingId
+            ? col.doc(editingId).set(Object.assign({}, rowsById[editingId] || {}, body))
+            : col.add(Object.assign({created_at: Date.now()}, body));
           p.then(function(){
             status.textContent = (editingId ? '수정됨' : '저장됨') + ' · ' + new Date().toLocaleTimeString('ko-KR');
             clearForm();
@@ -1753,11 +1767,19 @@ show((location.hash||'').replace(/^#\/?/,''));
     return JSON.stringify(o,null,1);
   }
   function download(text){
-    var a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([text],{type:'application/json'}));
-    a.download='돈데이터.json';
-    document.body.appendChild(a);a.click();a.remove();
-    setStatus('다운로드 폴더에 「돈데이터.json」을 저장했습니다. 구글 드라이브 작업대/돈 폴더로 옮겨 두세요 · '+new Date().toLocaleTimeString('ko-KR'));
+    var dlp=(window.claude&&window.claude.use)?window.claude.use('downloads'):Promise.resolve(null);
+    dlp.then(function(d){
+      if(d){
+        return d.save({filename:'돈데이터.json',data:text}).then(function(){
+          setStatus('「돈데이터.json」을 저장했습니다. 구글 드라이브 작업대/돈 폴더로 옮겨 두세요 · '+new Date().toLocaleTimeString('ko-KR'));
+        }).catch(function(e){ if(!e||e.code!=='declined') setStatus('저장 실패',true); });
+      }
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([text],{type:'application/json'}));
+      a.download='돈데이터.json';
+      document.body.appendChild(a);a.click();a.remove();
+      setStatus('다운로드 폴더에 「돈데이터.json」을 저장했습니다. 구글 드라이브 작업대/돈 폴더로 옮겨 두세요 · '+new Date().toLocaleTimeString('ko-KR'));
+    });
   }
   async function save(forcePick){
     var text=snapshot();
@@ -1785,19 +1807,23 @@ show((location.hash||'').replace(/^#\/?/,''));
     KEYS.forEach(function(k){if(o.data[k]!=null){try{localStorage.setItem(k,o.data[k]);}catch(e){}}});
     location.reload();
   }
+  function loadViaInput(){
+    var inp=document.createElement('input');inp.type='file';inp.accept='.json';
+    inp.onchange=function(){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(){applyText(r.result);};r.readAsText(f);};
+    inp.click();
+  }
   async function load(){
+    if(!canFS){ loadViaInput(); return; }
     try{
-      if(canFS){
-        var hs=await window.showOpenFilePicker({types:FT});
-        var f=await hs[0].getFile();
-        await setH(hs[0]);
-        applyText(await f.text());
-      } else {
-        var inp=document.createElement('input');inp.type='file';inp.accept='.json';
-        inp.onchange=function(){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(){applyText(r.result);};r.readAsText(f);};
-        inp.click();
-      }
-    }catch(e){if(!e||e.name!=='AbortError'){console.error(e);setStatus('불러오기 실패',true);}}
+      var hs=await window.showOpenFilePicker({types:FT});
+      var f=await hs[0].getFile();
+      await setH(hs[0]);
+      applyText(await f.text());
+    }catch(e){
+      if(e&&e.name==='AbortError') return;
+      console.error(e);
+      loadViaInput();
+    }
   }
   document.querySelectorAll('.mb-save').forEach(function(b){b.addEventListener('click',function(){save(false);});});
   document.querySelectorAll('.mb-relink').forEach(function(b){b.addEventListener('click',function(){save(true);});});
